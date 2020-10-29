@@ -1,23 +1,32 @@
 import Foundation
 
 extension String {
+    
+    func substring(from: Int, length: Int) -> String {
+        return (self as NSString).substring(with: NSMakeRange(from, length))
+    }
+    
     func enclosed(by: String) -> Bool {
         return hasPrefix(by) && hasSuffix(by)
     }
     
-    var isExpression: Bool {
-        // TODO: this needs to understand if it contains subexpressions
-        /// (h)(x) <- not an expression
-        // algorithm: go through it and if you find the closing braces before end of the string you know that t
-        guard hasPrefix("(") && hasSuffix(")") else { return false }
-        var numOpen = 0
-        
-        for (index, ch) in self.enumerated() {
-            if ch == "(" { numOpen += 1 }
-            if ch == ")" { if numOpen == 1 && index < self.count - 1 { return false }}
-        }
-        return true
+    var insideOfExpression: String {
+        return (self as NSString).substring(with: NSMakeRange(1, self.count - 2))
     }
+    
+//    var isExpression: Bool {
+//        // TODO: this needs to understand if it contains subexpressions
+//        /// (h)(x) <- not an expression
+//        // algorithm: go through it and if you find the closing braces before end of the string you know that t
+//        guard hasPrefix("(") && hasSuffix(")") else { return false }
+//        var numOpen = 0
+//
+//        for (index, ch) in self.enumerated() {
+//            if ch == "(" { numOpen += 1 }
+//            if ch == ")" { if numOpen == 1 && index < self.count - 1 { return false }}
+//        }
+//        return true
+//    }
 }
 
 enum Word: Equatable {
@@ -96,27 +105,90 @@ class Transcoder {
     ///     separated by whitespace
     ///
     ///
+    
     func scan(text: String) -> [Word] {
-        let newText = text.replacingOccurrences(of: "\n", with: " ")
+        var exprLevel = 0
+        var isString = false
+        var start: Int?
+        var words = [Word]()
+        var lastChar: Character?
         
-        // TODO: need a way to split up in case we have multiple expressions
-        if newText.isExpression {
-            let contents = (newText as NSString).substring(with: NSMakeRange(1, newText.count - 2))
-            return [.expression(scan(text: contents))]
+        for (index, char) in text.enumerated() {
+            let isEnd = index == text.count-1
+            if char == "\"" && exprLevel == 0 {
+                if isString {
+                    let sub = text.substring(from: start!, length: index + 1 - start!)
+                    words.append(.string(sub))
+                    isString = false
+                    start = nil
+                }
+                else if isEnd {
+                    words.append(.invalid(text))
+                }
+                else {
+                    isString = true
+                    start = index
+                }
+            }
+            else if char == "(" && !isString {
+                if (lastChar != nil && lastChar != " ") || isEnd {
+                    words.append(.invalid(text))
+                }
+                else if exprLevel == 0 {
+                    start = index + 1
+                }
+                exprLevel += 1
+            }
+            else if char == ")" && !isString {
+                exprLevel -= 1
+                if exprLevel == 0 {
+                    let substring = text.substring(from: start!, length: index - start!)
+                    words.append(.expression(scan(text: substring)))
+                    start = nil
+                }
+                else if isEnd {
+                    words.append(.invalid(text))
+                }
+            }
+            // TODO check for any whitespace: newline/tab/space
+            else if !isString && exprLevel == 0 {
+                if char != " " && start == nil {
+                    start = index
+                }
+                
+                else if (char == " " || isEnd) && start != nil  {
+                    let offset = char == " " ? -1 : 0
+                    let substring = text.substring(from: start!, length: index + 1 - start! + offset)
+                    words.append(.symbol(substring))
+                    start = nil
+                }
+            }
+            lastChar = char
         }
-        
-        /// at this point we should have scanned all expressions and strings already so
-        /// that we don't split up any of those
-        else if newText.contains(" ") {
-            let parts = newText.split(separator: " ")
-                .compactMap({String($0)})
-                .filter({$0.count > 0})
-            return parts.compactMap({scan(text: $0).first})
-        }
-        else {
-            return [Word(string: newText)].compactMap({$0})
-        }
+        return words
     }
+    
+//    func scan(text: String) -> [Word] {
+//        let newText = text.replacingOccurrences(of: "\n", with: " ")
+//
+//        // TODO: need a way to split up in case we have multiple expressions
+//        if newText.isExpression {
+//            let contents = newText.insideOfExpression
+//            return [.expression(scan(text: contents))]
+//        }
+//
+//        /// at this point we should have scanned all expressions and strings already so
+//        /// that we don't split up any of those
+//        else if newText.contains(" ") {
+//            let parts = newText.split(separator: " ")
+//                .compactMap({String($0)})
+//                .filter({$0.count > 0})
+//            return parts.compactMap({scan(text: $0).first})
+//        }
+//        else {
+//            return [Word(string: newText)].compactMap({$0})
+//        }
+//    }
     
     func evaluate(words: [Word]) -> Evaluation {
         if let invalidExpr = words.compactMap({$0.invalidExpression}).first {
