@@ -52,6 +52,7 @@ class Lisp2SwiftTests: XCTestCase {
         (print "hi")
         """
         let result = parser.parse(text: lisp)
-        XCTAssertEqual(result, .valid(expressions: [.symbol("print"), .string("\"hi\"")]))        
+        let subExpressions: [Expression] = [.symbol("print"), .string("\"hi\"")]
+        XCTAssertEqual(result, .valid(expressions: [.expression(subExpressions)]))
     }
 }

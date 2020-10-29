@@ -20,14 +20,12 @@ enum Word: Equatable {
     case invalid(_: String)
     
     init?(string: String) {
+        guard string.count > 0 else { return nil }
         if string.enclosed(by: "\"") {
             self = .string(string)
         }
         else if string.contains("(") || string.contains(")") {
             self = .invalid(string)
-        }
-        else if string.count == 0 {
-            return nil
         }
         else {
             self = .symbol(string)
@@ -39,6 +37,19 @@ enum Expression: Equatable {
     case string(_: String)
     case symbol(_: String)
     case expression(_: [Expression])
+    
+    init?(word: Word) {
+        switch word {
+        case .invalid:
+            return nil
+        case .expression(let words):
+            self = .expression(words.compactMap(Expression.init))
+        case .string(let string):
+            self = .string(string)
+        case .symbol(let symbol):
+            self = .symbol(symbol)
+        }
+    }
 }
 
 enum ParseResult: Equatable {
@@ -66,8 +77,7 @@ class Parser {
 
     func parse(text: String) -> ParseResult {
         let words = scan(text: text)
-        // TODO: check that first tier only has expressions
-        return .valid(expressions: [])
+        return .valid(expressions: words.compactMap(Expression.init))
     }
     
     
