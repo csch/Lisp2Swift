@@ -1,15 +1,22 @@
 import Foundation
 
-print("Hello, World!")
-
 extension String {
-    
     func enclosed(by: String) -> Bool {
         return hasPrefix(by) && hasSuffix(by)
     }
     
     var isExpression: Bool {
-        return hasPrefix("(") && hasSuffix(")")
+        // TODO: this needs to understand if it contains subexpressions
+        /// (h)(x) <- not an expression
+        // algorithm: go through it and if you find the closing braces before end of the string you know that t
+        guard hasPrefix("(") && hasSuffix(")") else { return false }
+        var numOpen = 0
+        
+        for (index, ch) in self.enumerated() {
+            if ch == "(" { numOpen += 1 }
+            if ch == ")" { if numOpen == 1 && index < self.count - 1 { return false }}
+        }
+        return true
     }
 }
 
@@ -29,6 +36,17 @@ enum Word: Equatable {
         }
         else {
             self = .symbol(string)
+        }
+    }
+    
+    var invalidExpression: String? {
+        switch self {
+        case .invalid(let expression):
+            return expression
+        case .expression(let words):
+            return words.compactMap({$0.invalidExpression}).first
+        default:
+            return nil
         }
     }
 }
@@ -52,64 +70,76 @@ enum Expression: Equatable {
     }
 }
 
-enum ParseResult: Equatable {
+enum Evaluation: Equatable {
     case valid(expressions: [Expression])
     case invalid(expression: String)
 }
 
-class Parser {
+class Transcoder {
       
+    ///
+    /// What we want:
+    ///  Given a line of text such as "   (foo bar) (x (y)) asdfs"
+    ///  we expect the following result [expression expression symbol]
+    ///
+    /// How do we do that:
+    ///  - Generally, we parse through by character and save indices of
+    ///    important events
+    ///
+    ///  1. We need parse for strings first, because they can include expressions
+    ///     While parsing a string whitespace and newlines are ignored
+    ///     If we finish parsing and our string is open, raise an error!
+    ///  2. While parsing an expression we just keep looking for the end parantheses
+    ///     so that we are on level 0. Whitespace ignored. When no end -> error
+    ///     When end reached, recurse on inside of string and return .expression(...)
+    ///  3. When not inside string and not inside expression we collect a list of symbols that will be returned
+    ///     separated by whitespace
+    ///
+    ///
     func scan(text: String) -> [Word] {
-        if text.isExpression {
-            let contents = (text as NSString).substring(with: NSMakeRange(1, text.count - 2))
+        let newText = text.replacingOccurrences(of: "\n", with: " ")
+        
+        // TODO: need a way to split up in case we have multiple expressions
+        if newText.isExpression {
+            let contents = (newText as NSString).substring(with: NSMakeRange(1, newText.count - 2))
             return [.expression(scan(text: contents))]
         }
-        else if text.contains(" ") {
-            let parts = text.split(separator: " ")
+        
+        /// at this point we should have scanned all expressions and strings already so
+        /// that we don't split up any of those
+        else if newText.contains(" ") {
+            let parts = newText.split(separator: " ")
                 .compactMap({String($0)})
                 .filter({$0.count > 0})
             return parts.compactMap({scan(text: $0).first})
         }
         else {
-            return [Word(string: text)].compactMap({$0})
+            return [Word(string: newText)].compactMap({$0})
         }
     }
-
-    func parse(text: String) -> ParseResult {
-        let words = scan(text: text)
+    
+    func evaluate(words: [Word]) -> Evaluation {
+        if let invalidExpr = words.compactMap({$0.invalidExpression}).first {
+            return .invalid(expression: invalidExpr)
+        }
         return .valid(expressions: words.compactMap(Expression.init))
     }
     
-    
-    
-//    // OLD IMPL
-//
-//    struct Expression2 {
-//        let symbol: String
-//        let parameters: [String]
-//    }
-//
-//    func oldParse(lispString: String) -> [Expression2] {
-//
-//        let string = lispString as NSString
-//        let startRange = string.range(of: "(")
-//        let endRange = string.range(of: ")")
-//
-//        guard startRange.location != NSNotFound && endRange.location != NSNotFound else {
-//            return []
-//        }
-//
-//        let range = NSMakeRange(startRange.location + 1, endRange.location-startRange.location - 1)
-//        let contents = string.substring(with: range)
-//
-//        let elements = contents.split(separator: " ").map({String($0)})
-//
-//        guard elements.count >= 2 else {
-//            return []
-//        }
-//
-//        let symbol = elements[0]
-//        let parameters = Array(elements.dropFirst())
-//        return [Expression2(symbol: symbol, parameters: parameters)]
-//    }
+    func transcode(expression: Expression) -> String {
+        
+        switch expression {
+        case .string(let string):
+            return string + ")"
+            
+        case .symbol(let symbol):
+            return symbol + "("
+            
+        case .expression(let expressions):
+            return expressions.map({transcode(expression: $0)}).reduce("", +)
+        }
+    }
+
+    func transcode(expressions: [Expression]) -> String {
+        return expressions.map({transcode(expression: $0) + "\n"}).reduce("", +)
+    }
 }

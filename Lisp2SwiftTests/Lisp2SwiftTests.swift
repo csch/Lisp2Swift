@@ -3,10 +3,16 @@ import XCTest
 
 class Lisp2SwiftTests: XCTestCase {
 
-    let parser = Parser()
+    let transcoder = Transcoder()
     
     func scan(_ text: String) -> [Word] {
-        return parser.scan(text: text)
+        return transcoder.scan(text: text)
+    }
+    
+    func l2s(_ text: String) -> String {
+        let words = transcoder.scan(text: text)
+        let result = transcoder.evaluate(words: words)
+        return transcoder.transcode(expressions: result.expressions!)
     }
     
     func test_scan_emptyText() {
@@ -23,6 +29,10 @@ class Lisp2SwiftTests: XCTestCase {
     
     func test_scan_expressionWithDoubleQuotedString() {
         XCTAssertEqual(scan("(\"hello\")"), [.expression([.string("\"hello\"")])])
+    }
+    
+    func test_scan_multiAtomExpressionWithSpaces() {
+        XCTAssertEqual(scan("   (test foo) "), [.expression([.symbol("test"), .symbol("foo")])])
     }
     
     func test_scan_emptyExpression() {
@@ -45,14 +55,44 @@ class Lisp2SwiftTests: XCTestCase {
         XCTAssertEqual(scan("basdf(foo"), [.invalid("basdf(foo")])
     }
     
-    ///
-    
-    func test_parse_print_expression() throws {
+    func test_evaluate_print_expression() throws {
         let lisp = """
         (print "hi")
         """
-        let result = parser.parse(text: lisp)
+        let words = transcoder.scan(text: lisp)
+        let result = transcoder.evaluate(words: words)
         let subExpressions: [Expression] = [.symbol("print"), .string("\"hi\"")]
         XCTAssertEqual(result, .valid(expressions: [.expression(subExpressions)]))
+    }
+    
+    func test_transcode_print_expression() throws {
+        let lisp = """
+        (print "hi")
+        """
+        let result = l2s(lisp)
+        XCTAssertEqual(result, "print(\"hi\")\n")
+    }
+    
+    func test_transcode_2_print_expressions() throws {
+        let lisp = """
+        (print "hello")
+        (print "world")
+        """
+        let result = l2s(lisp)
+        XCTAssertEqual(result, """
+        print(\"hello\")
+        print(\"world\")
+        """)
+    }
+}
+
+extension Evaluation {
+    var expressions: [Expression]? {
+        switch self {
+        case .valid(let expressions):
+            return expressions
+        case .invalid:
+            return nil
+        }
     }
 }
