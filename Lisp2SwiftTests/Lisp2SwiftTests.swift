@@ -55,6 +55,11 @@ class Lisp2SwiftTests: XCTestCase {
         XCTAssertEqual(scan("basdf(foo"), [.invalid("basdf(foo")])
     }
     
+    func test_scan_expressionsWithNewLine() {
+        let expected: [Word] = [.expression([.symbol("foo")]), .expression([.symbol("bar")])]
+        XCTAssertEqual(scan("(foo)\n(bar)"), expected)
+    }
+    
     func test_evaluate_print_expression() throws {
         let lisp = """
         (print "hi")
@@ -78,11 +83,13 @@ class Lisp2SwiftTests: XCTestCase {
         (print "hello")
         (print "world")
         """
-        let result = l2s(lisp)
-        XCTAssertEqual(result, """
+        let expected = """
         print(\"hello\")
         print(\"world\")
-        """)
+
+        """
+        let result = l2s(lisp)
+        XCTAssertEqual(result, expected)
     }
 }
 

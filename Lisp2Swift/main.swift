@@ -1,5 +1,11 @@
 import Foundation
 
+extension Character {
+    var isWhitespace: Bool {
+        return self == " " || self == "\t" || self == "\n"
+    }
+}
+
 extension String {
     
     func substring(from: Int, length: Int) -> String {
@@ -131,7 +137,7 @@ class Transcoder {
                 }
             }
             else if char == "(" && !isString {
-                if (lastChar != nil && lastChar != " ") || isEnd {
+                if (lastChar != nil && lastChar!.isWhitespace == false) || isEnd {
                     words.append(.invalid(text))
                 }
                 else if exprLevel == 0 {
@@ -150,14 +156,13 @@ class Transcoder {
                     words.append(.invalid(text))
                 }
             }
-            // TODO check for any whitespace: newline/tab/space
             else if !isString && exprLevel == 0 {
-                if char != " " && start == nil {
+                if char.isWhitespace == false && start == nil {
                     start = index
                 }
                 
-                else if (char == " " || isEnd) && start != nil  {
-                    let offset = char == " " ? -1 : 0
+                else if (char.isWhitespace || isEnd) && start != nil  {
+                    let offset = char.isWhitespace ? -1 : 0
                     let substring = text.substring(from: start!, length: index + 1 - start! + offset)
                     words.append(.symbol(substring))
                     start = nil
