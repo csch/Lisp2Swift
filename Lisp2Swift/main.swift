@@ -10,29 +10,7 @@ extension String {
     
     func substring(from: Int, length: Int) -> String {
         return (self as NSString).substring(with: NSMakeRange(from, length))
-    }
-    
-    func enclosed(by: String) -> Bool {
-        return hasPrefix(by) && hasSuffix(by)
-    }
-    
-    var insideOfExpression: String {
-        return (self as NSString).substring(with: NSMakeRange(1, self.count - 2))
-    }
-    
-//    var isExpression: Bool {
-//        // TODO: this needs to understand if it contains subexpressions
-//        /// (h)(x) <- not an expression
-//        // algorithm: go through it and if you find the closing braces before end of the string you know that t
-//        guard hasPrefix("(") && hasSuffix(")") else { return false }
-//        var numOpen = 0
-//
-//        for (index, ch) in self.enumerated() {
-//            if ch == "(" { numOpen += 1 }
-//            if ch == ")" { if numOpen == 1 && index < self.count - 1 { return false }}
-//        }
-//        return true
-//    }
+    }    
 }
 
 enum Word: Equatable {
@@ -40,19 +18,6 @@ enum Word: Equatable {
     case symbol(_: String)
     case expression(_: [Word])
     case invalid(_: String)
-    
-    init?(string: String) {
-        guard string.count > 0 else { return nil }
-        if string.enclosed(by: "\"") {
-            self = .string(string)
-        }
-        else if string.contains("(") || string.contains(")") {
-            self = .invalid(string)
-        }
-        else {
-            self = .symbol(string)
-        }
-    }
     
     var invalidExpression: String? {
         switch self {
@@ -172,29 +137,7 @@ class Transcoder {
         }
         return words
     }
-    
-//    func scan(text: String) -> [Word] {
-//        let newText = text.replacingOccurrences(of: "\n", with: " ")
-//
-//        // TODO: need a way to split up in case we have multiple expressions
-//        if newText.isExpression {
-//            let contents = newText.insideOfExpression
-//            return [.expression(scan(text: contents))]
-//        }
-//
-//        /// at this point we should have scanned all expressions and strings already so
-//        /// that we don't split up any of those
-//        else if newText.contains(" ") {
-//            let parts = newText.split(separator: " ")
-//                .compactMap({String($0)})
-//                .filter({$0.count > 0})
-//            return parts.compactMap({scan(text: $0).first})
-//        }
-//        else {
-//            return [Word(string: newText)].compactMap({$0})
-//        }
-//    }
-    
+        
     func evaluate(words: [Word]) -> Evaluation {
         if let invalidExpr = words.compactMap({$0.invalidExpression}).first {
             return .invalid(expression: invalidExpr)
