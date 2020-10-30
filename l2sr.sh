@@ -2,5 +2,6 @@
 
 args=("$@")
 
-swift ./Lisp2Swift/main.swift $args > test.swift
+path="DerivedData/Lisp2Swift/Build/Products/Debug"
+$path/Lisp2Swift $args > test.swift
 swift test.swift

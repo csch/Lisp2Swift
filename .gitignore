@@ -3,6 +3,7 @@ xcuserdata
 test.swift
 *.xcuserdatad
 *.xcuserstate
+DerivedData
 
 
 

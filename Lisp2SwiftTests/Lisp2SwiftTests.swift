@@ -1,21 +1,20 @@
 import XCTest
-@testable import Lisp2Swift
 
 class Lisp2SwiftTests: XCTestCase {
 
     let transcoder = Transcoder()
-    
+        
     func scan(_ text: String) -> [Word] {
-        return transcoder.scan(text: text)
+        return transcoder.scan(text)
     }
     
     func eval(_ text: String) -> Evaluation {
-        let words = transcoder.scan(text: text)
+        let words = scan(text)
         return transcoder.evaluate(words: words)
     }
     
     func l2s(_ text: String) -> String {
-        let words = transcoder.scan(text: text)
+        let words = scan(text)
         let result = transcoder.evaluate(words: words)
         return transcoder.transcode(expressions: result.expressions!)
     }
@@ -67,13 +66,15 @@ class Lisp2SwiftTests: XCTestCase {
     
     /// EVAL
     
+    func assertExpression(with expressions: [Expression], for lisp: String, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertEqual(eval(lisp), .valid(expressions: [.expression(expressions)]), file: file, line: line)
+    }
+    
     func test_eval_print_expression() throws {
         let lisp = """
         (print "hi")
         """
-        let result = eval(lisp)
-        let subExpressions: [Expression] = [.symbol("print"), .string("\"hi\"")]
-        XCTAssertEqual(result, .valid(expressions: [.expression(subExpressions)]))
+        assertExpression(with: [.symbol("print"), .string("\"hi\"")], for: lisp)
     }
     
     func test_eval_foo_expression() throws {
@@ -88,9 +89,14 @@ class Lisp2SwiftTests: XCTestCase {
         let lisp = """
         (print 123)
         """
-        let result = eval(lisp)
-        let subExpressions: [Expression] = [.symbol("print"), .number("123")]
-        XCTAssertEqual(result, .valid(expressions: [.expression(subExpressions)]))
+        assertExpression(with: [.symbol("print"), .number("123")], for: lisp)
+    }
+    
+    func test_eval_add_expression() throws {
+        let lisp = """
+        (+ 1 2 3)
+        """
+        assertExpression(with: [.symbol("+"), .number("1"), .number("2"), .number("3")], for: lisp)
     }
     
     /// TRANSCODE
@@ -115,6 +121,14 @@ class Lisp2SwiftTests: XCTestCase {
         """
         let result = l2s(lisp)
         XCTAssertEqual(result, expected)
+    }
+    
+    func test_transcode_add_expression() throws {
+        let lisp = """
+        (+ 1 2 3)
+        """
+        let result = l2s(lisp)
+        XCTAssertEqual(result, "(1 + 2 + 3)\n")
     }
 }
 

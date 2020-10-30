@@ -52,7 +52,7 @@ enum EvalExpression: Equatable {
     
     init(word: Word) {
         
-        let knownSymbols = [ "print" ]
+        let knownSymbols = [ "print", "+" ]
         
         switch word {
         case .invalid(let expr):
@@ -106,69 +106,6 @@ enum Evaluation: Equatable {
 }
 
 class Transcoder {
-      
-    func scan(text: String) -> [Word] {
-        var exprLevel = 0
-        var isString = false
-        var start: Int?
-        var words = [Word]()
-        var lastChar: Character?
-        
-        for (index, char) in text.enumerated() {
-            let isEnd = index == text.count-1
-            if char == "\"" && exprLevel == 0 {
-                if isString {
-                    let sub = text.substring(from: start!, length: index + 1 - start!)
-                    words.append(.string(sub))
-                    isString = false
-                    start = nil
-                }
-                else if isEnd {
-                    words.append(.invalid(text))
-                }
-                else {
-                    isString = true
-                    start = index
-                }
-            }
-            else if char == "(" && !isString {
-                if (lastChar != nil && lastChar!.isWhitespace == false) || isEnd {
-                    words.append(.invalid(text))
-                }
-                else if exprLevel == 0 {
-                    start = index + 1
-                }
-                exprLevel += 1
-            }
-            else if char == ")" && !isString {
-                exprLevel -= 1
-                if exprLevel == 0 {
-                    let substring = text.substring(from: start!, length: index - start!)
-                    words.append(.expression(scan(text: substring)))
-                    start = nil
-                }
-                else if isEnd {
-                    words.append(.invalid(text))
-                }
-            }
-            else if !isString && exprLevel == 0 {
-                if char.isWhitespace == false && start == nil {
-                    start = index
-                }
-                
-                else if (char.isWhitespace || isEnd) && start != nil  {
-                    let offset = char.isWhitespace ? -1 : 0
-                    let substring = text.substring(from: start!, length: index + 1 - start! + offset)
-                    words.append(.atom(substring))
-                    start = nil
-                }
-            }
-            lastChar = char
-        }
-        return words
-    }
-    
-    let knownSymbols = [ "print" ]
     
     func evaluate(words: [Word]) -> Evaluation {
         
@@ -188,16 +125,29 @@ class Transcoder {
         
         switch expression {
         case .string(let string):
-            return string + ")"
+            return string
             
         case .symbol(let symbol):
-            return symbol + "("
+            return symbol
             
         case .number(let number):
-            return number + ")"
+            return number
         
         case .expression(let expressions):
-            return expressions.map({transcode(expression: $0)}).reduce("", +)
+            // TODO: go through the sub expressions and apply them
+            if expressions.count < 2 { fatalError("Transcode: Unexpected number of expression") }
+            let command = transcode(expression: expressions[0])
+            let params = Array(expressions.dropFirst()).map(transcode(expression:))
+            switch command {
+            case "print":
+                let printParams = params.joined(separator: ",")
+                return command + "(" + printParams + ")"
+            case "+":
+                let addition = params.joined(separator: " + ")
+                return "(\(addition))"
+            default:
+                fatalError("Transcode: Unexpected command: \(command)")
+            }
         }
     }
 
@@ -209,7 +159,7 @@ class Transcoder {
 let t = Transcoder()
 let input = Array(CommandLine.arguments.dropFirst())
 let lisp = input.joined(separator: " ")
-let scanned = t.scan(text: lisp)
+let scanned = t.scan(lisp)
 switch t.evaluate(words: scanned) {
 
 case .invalid(let expression):
