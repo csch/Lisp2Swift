@@ -1,5 +1,6 @@
 project.xcworkspace
 xcuserdata
+test.swift
 *.xcuserdatad
 *.xcuserstate
 

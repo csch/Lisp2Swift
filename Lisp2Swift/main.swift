@@ -142,3 +142,16 @@ class Transcoder {
         return expressions.map({transcode(expression: $0) + "\n"}).reduce("", +)
     }
 }
+
+let t = Transcoder()
+let input = Array(CommandLine.arguments.dropFirst())
+let lisp = input.joined(separator: " ")
+let scanned = t.scan(text: lisp)
+switch t.evaluate(words: scanned) {
+
+case .invalid(let expression):
+    print("[ERROR] invalid expression: " + expression)
+case .valid(let expressions):
+    let code = t.transcode(expressions: expressions)
+    print(code)
+}
