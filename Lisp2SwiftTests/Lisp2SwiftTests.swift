@@ -9,6 +9,11 @@ class Lisp2SwiftTests: XCTestCase {
         return transcoder.scan(text: text)
     }
     
+    func eval(_ text: String) -> Evaluation {
+        let words = transcoder.scan(text: text)
+        return transcoder.evaluate(words: words)
+    }
+    
     func l2s(_ text: String) -> String {
         let words = transcoder.scan(text: text)
         let result = transcoder.evaluate(words: words)
@@ -60,15 +65,26 @@ class Lisp2SwiftTests: XCTestCase {
         XCTAssertEqual(scan("(foo)\n(bar)"), expected)
     }
     
-    func test_evaluate_print_expression() throws {
+    /// EVAL
+    
+    func test_eval_print_expression() throws {
         let lisp = """
         (print "hi")
         """
-        let words = transcoder.scan(text: lisp)
-        let result = transcoder.evaluate(words: words)
+        let result = eval(lisp)
         let subExpressions: [Expression] = [.symbol("print"), .string("\"hi\"")]
         XCTAssertEqual(result, .valid(expressions: [.expression(subExpressions)]))
     }
+    
+    func test_eval_foo_expression() throws {
+        let lisp = """
+        (foo "hi")
+        """
+        let result = eval(lisp)
+        XCTAssertEqual(result, .unknown(symbol: "foo"))
+    }    
+    
+    /// TRANSCODE
     
     func test_transcode_print_expression() throws {
         let lisp = """
@@ -99,6 +115,8 @@ extension Evaluation {
         case .valid(let expressions):
             return expressions
         case .invalid:
+            return nil
+        case .unknown:
             return nil
         }
     }

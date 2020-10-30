@@ -28,6 +28,17 @@ enum Word: Equatable {
             return nil
         }
     }
+    
+    var symbols: [String] {
+        switch self {
+        case .symbol(let symbol):
+            return [symbol]
+        case .expression(let words):
+            return words.flatMap(({$0.symbols}))
+        default:
+            return []
+        }
+    }
 }
 
 enum Expression: Equatable {
@@ -38,7 +49,7 @@ enum Expression: Equatable {
     init?(word: Word) {
         switch word {
         case .invalid:
-            return nil
+            fatalError("Unexpected: invalid words should not be evaluated")
         case .expression(let words):
             self = .expression(words.compactMap(Expression.init))
         case .string(let string):
@@ -51,6 +62,7 @@ enum Expression: Equatable {
 
 enum Evaluation: Equatable {
     case valid(expressions: [Expression])
+    case unknown(symbol: String)
     case invalid(expression: String)
 }
 
@@ -116,11 +128,19 @@ class Transcoder {
         }
         return words
     }
+    
+    let knownSymbols = [ "print" ]
         
     func evaluate(words: [Word]) -> Evaluation {
+        /// Check for invalid words e.g. ("blast)))
         if let invalidExpr = words.compactMap({$0.invalidExpression}).first {
             return .invalid(expression: invalidExpr)
         }
+        
+        if let unknownSymbol = words.flatMap({$0.symbols}).filter({knownSymbols.contains($0) == false}).first {
+            return .unknown(symbol: unknownSymbol)
+        }
+        
         return .valid(expressions: words.compactMap(Expression.init))
     }
     
@@ -150,8 +170,11 @@ let scanned = t.scan(text: lisp)
 switch t.evaluate(words: scanned) {
 
 case .invalid(let expression):
-    print("[ERROR] invalid expression: " + expression)
+    print("[ERROR] Invalid expression: " + expression)
+case .unknown(let symbol):
+    print("[ERROR] Unknown symbol: " + symbol)
 case .valid(let expressions):
     let code = t.transcode(expressions: expressions)
     print(code)
+    
 }
