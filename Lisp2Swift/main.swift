@@ -7,7 +7,6 @@ extension Character {
 }
 
 extension String {
-    
     func substring(from: Int, length: Int) -> String {
         return (self as NSString).substring(with: NSMakeRange(from, length))
     }    
@@ -57,26 +56,6 @@ enum Evaluation: Equatable {
 
 class Transcoder {
       
-    ///
-    /// What we want:
-    ///  Given a line of text such as "   (foo bar) (x (y)) asdfs"
-    ///  we expect the following result [expression expression symbol]
-    ///
-    /// How do we do that:
-    ///  - Generally, we parse through by character and save indices of
-    ///    important events
-    ///
-    ///  1. We need parse for strings first, because they can include expressions
-    ///     While parsing a string whitespace and newlines are ignored
-    ///     If we finish parsing and our string is open, raise an error!
-    ///  2. While parsing an expression we just keep looking for the end parantheses
-    ///     so that we are on level 0. Whitespace ignored. When no end -> error
-    ///     When end reached, recurse on inside of string and return .expression(...)
-    ///  3. When not inside string and not inside expression we collect a list of symbols that will be returned
-    ///     separated by whitespace
-    ///
-    ///
-    
     func scan(text: String) -> [Word] {
         var exprLevel = 0
         var isString = false
