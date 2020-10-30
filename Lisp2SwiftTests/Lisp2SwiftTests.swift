@@ -64,6 +64,14 @@ class Lisp2SwiftTests: XCTestCase {
         XCTAssertEqual(scan("(foo)\n(bar)"), expected)
     }
     
+    func test_scan_nestedExpression() {
+        let expected: [Word] = [.expression([
+            .atom("print"),
+            .expression([.atom("+"), .atom("1"), .atom("2"), .atom("3")])
+        ])]
+        XCTAssertEqual(scan("(print (+ 1 2 3))"), expected)
+    }
+    
     /// EVAL
     
     func assertExpression(with expressions: [Expression], for lisp: String, file: StaticString = #filePath, line: UInt = #line) {
@@ -97,6 +105,15 @@ class Lisp2SwiftTests: XCTestCase {
         (+ 1 2 3)
         """
         assertExpression(with: [.symbol("+"), .number("1"), .number("2"), .number("3")], for: lisp)
+    }
+    
+    func test_eval_nested_expression() throws {
+        let lisp = """
+        (print (+ 1 2 3))
+        """
+        assertExpression(with: [.symbol("print"),
+                                .expression([.symbol("+"), .number("1"), .number("2"), .number("3")])],
+                                for: lisp)
     }
     
     /// TRANSCODE
