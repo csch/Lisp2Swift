@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA5496FF254CA44800980FAE /* eval.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5496FE254CA44800980FAE /* eval.swift */; };
+		AA549703254CA4BB00980FAE /* utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA549702254CA4BB00980FAE /* utils.swift */; };
+		AA549707254CA57A00980FAE /* transcode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA549706254CA57A00980FAE /* transcode.swift */; };
+		AA54970C254CA60800980FAE /* utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA549702254CA4BB00980FAE /* utils.swift */; };
+		AA54970F254CA60C00980FAE /* transcode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA549706254CA57A00980FAE /* transcode.swift */; };
+		AA549710254CA60C00980FAE /* eval.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5496FE254CA44800980FAE /* eval.swift */; };
 		AA9027FF2549C72E000F3616 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA9027FE2549C72E000F3616 /* main.swift */; };
 		AA90280D2549C74D000F3616 /* Lisp2SwiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA90280C2549C74D000F3616 /* Lisp2SwiftTests.swift */; };
 		AAAA0A7B254C305800C3E83E /* scan.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0A7A254C305800C3E83E /* scan.swift */; };
@@ -37,6 +43,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AA5496FE254CA44800980FAE /* eval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = eval.swift; sourceTree = "<group>"; };
+		AA549702254CA4BB00980FAE /* utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = utils.swift; sourceTree = "<group>"; };
+		AA549706254CA57A00980FAE /* transcode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = transcode.swift; sourceTree = "<group>"; };
 		AA9027FB2549C72E000F3616 /* Lisp2Swift */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Lisp2Swift; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA9027FE2549C72E000F3616 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		AA90280A2549C74D000F3616 /* Lisp2SwiftTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Lisp2SwiftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -85,7 +94,10 @@
 			isa = PBXGroup;
 			children = (
 				AA9027FE2549C72E000F3616 /* main.swift */,
+				AA549702254CA4BB00980FAE /* utils.swift */,
 				AAAA0A7A254C305800C3E83E /* scan.swift */,
+				AA5496FE254CA44800980FAE /* eval.swift */,
+				AA549706254CA57A00980FAE /* transcode.swift */,
 			);
 			path = Lisp2Swift;
 			sourceTree = "<group>";
@@ -189,7 +201,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				AAAA0A7B254C305800C3E83E /* scan.swift in Sources */,
+				AA5496FF254CA44800980FAE /* eval.swift in Sources */,
 				AA9027FF2549C72E000F3616 /* main.swift in Sources */,
+				AA549703254CA4BB00980FAE /* utils.swift in Sources */,
+				AA549707254CA57A00980FAE /* transcode.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -198,8 +213,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				AAAA0A85254C314400C3E83E /* main.swift in Sources */,
+				AA549710254CA60C00980FAE /* eval.swift in Sources */,
 				AAAA0A88254C314600C3E83E /* scan.swift in Sources */,
 				AA90280D2549C74D000F3616 /* Lisp2SwiftTests.swift in Sources */,
+				AA54970C254CA60800980FAE /* utils.swift in Sources */,
+				AA54970F254CA60C00980FAE /* transcode.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

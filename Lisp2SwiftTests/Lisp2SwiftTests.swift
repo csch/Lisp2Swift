@@ -71,7 +71,7 @@ class Lisp2SwiftTests: XCTestCase {
         ])]
         XCTAssertEqual(scan("(print (+ 1 2 3))"), expected)
     }
-    
+        
     /// EVAL
     
     func assertExpression(with expressions: [Expression], for lisp: String, file: StaticString = #filePath, line: UInt = #line) {
@@ -116,6 +116,14 @@ class Lisp2SwiftTests: XCTestCase {
                                 for: lisp)
     }
     
+    func test_scan_lowerThanExpression() {
+        let lisp = """
+        (< 4 5)
+        """
+        assertExpression(with: [.symbol("<"), .number("4"), .number("5")], for: lisp)
+    }
+
+    
     /// TRANSCODE
     
     func test_transcode_print_expression() throws {
@@ -146,6 +154,14 @@ class Lisp2SwiftTests: XCTestCase {
         """
         let result = l2s(lisp)
         XCTAssertEqual(result, "(1 + 2 + 3)\n")
+    }
+    
+    func test_transcode_printSmaller_expression() throws {
+        let lisp = """
+        (print (< 1 3))
+        """
+        let result = l2s(lisp)
+        XCTAssertEqual(result, "print(1 < 3)\n")
     }
 }
 

@@ -1,5 +1,12 @@
 import Foundation
 
+enum Word: Equatable {
+    case string(_: String)
+    case atom(_: String)
+    case expression(_: [Word])
+    case invalid(_: String)
+}
+
 extension Transcoder {
     
     func scan(_ text: String) -> [Word] {
