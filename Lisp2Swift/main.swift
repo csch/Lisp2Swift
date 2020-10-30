@@ -14,7 +14,7 @@ extension String {
 
 enum Word: Equatable {
     case string(_: String)
-    case symbol(_: String)
+    case atom(_: String)
     case expression(_: [Word])
     case invalid(_: String)
     
@@ -29,20 +29,21 @@ enum Word: Equatable {
         }
     }
     
-    var symbols: [String] {
-        switch self {
-        case .symbol(let symbol):
-            return [symbol]
-        case .expression(let words):
-            return words.flatMap(({$0.symbols}))
-        default:
-            return []
-        }
-    }
+//    var symbols: [String] {
+//        switch self {
+//        case .symbol(let symbol):
+//            return [symbol]
+//        case .expression(let words):
+//            return words.flatMap(({$0.symbols}))
+//        default:
+//            return []
+//        }
+//    }
 }
 
 enum Expression: Equatable {
     case string(_: String)
+    case number(_: String)
     case symbol(_: String)
     case expression(_: [Expression])
     
@@ -54,8 +55,8 @@ enum Expression: Equatable {
             self = .expression(words.compactMap(Expression.init))
         case .string(let string):
             self = .string(string)
-        case .symbol(let symbol):
-            self = .symbol(symbol)
+        case .atom(let atom):
+            self = .symbol(atom)
         }
     }
 }
@@ -120,7 +121,7 @@ class Transcoder {
                 else if (char.isWhitespace || isEnd) && start != nil  {
                     let offset = char.isWhitespace ? -1 : 0
                     let substring = text.substring(from: start!, length: index + 1 - start! + offset)
-                    words.append(.symbol(substring))
+                    words.append(.atom(substring))
                     start = nil
                 }
             }
@@ -137,9 +138,14 @@ class Transcoder {
             return .invalid(expression: invalidExpr)
         }
         
-        if let unknownSymbol = words.flatMap({$0.symbols}).filter({knownSymbols.contains($0) == false}).first {
-            return .unknown(symbol: unknownSymbol)
-        }
+        
+        //
+        // TODO: refactor this to use a function that evaluates a word and give either an error or valid expression
+        //       get rid of the `Expression.init`
+        
+//        if let unknownSymbol = words.flatMap({$0.symbols}).filter({knownSymbols.contains($0) == false}).first {
+//            return .unknown(symbol: unknownSymbol)
+//        }
         
         return .valid(expressions: words.compactMap(Expression.init))
     }
@@ -153,6 +159,9 @@ class Transcoder {
         case .symbol(let symbol):
             return symbol + "("
             
+        case .number(let number):
+            return number + ")"
+        
         case .expression(let expressions):
             return expressions.map({transcode(expression: $0)}).reduce("", +)
         }

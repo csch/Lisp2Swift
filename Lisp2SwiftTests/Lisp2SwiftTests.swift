@@ -82,7 +82,16 @@ class Lisp2SwiftTests: XCTestCase {
         """
         let result = eval(lisp)
         XCTAssertEqual(result, .unknown(symbol: "foo"))
-    }    
+    }
+    
+    func test_eval_number_expression() throws {
+        let lisp = """
+        (print 123)
+        """
+        let result = eval(lisp)
+        let subExpressions: [Expression] = [.symbol("print"), .number("123")]
+        XCTAssertEqual(result, .valid(expressions: [.expression(subExpressions)]))
+    }
     
     /// TRANSCODE
     
