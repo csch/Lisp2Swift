@@ -16,29 +16,63 @@ enum Word: Equatable {
     case string(_: String)
     case atom(_: String)
     case expression(_: [Word])
-    case invalid(_: String)
+    case invalid(_: String)    
+}
+
+enum EvalExpression: Equatable {
     
-    var invalidExpression: String? {
+    case string(_: String)
+    case number(_: String)
+    case symbol(_: String)
+    case invalid(_: String)
+    case unknownSymbol(_: String)
+    case expression(_: [EvalExpression])
+    
+    var firstInvalid: String? {
         switch self {
         case .invalid(let expression):
             return expression
         case .expression(let words):
-            return words.compactMap({$0.invalidExpression}).first
+            return words.compactMap({$0.firstInvalid}).first
         default:
             return nil
         }
     }
     
-//    var symbols: [String] {
-//        switch self {
-//        case .symbol(let symbol):
-//            return [symbol]
-//        case .expression(let words):
-//            return words.flatMap(({$0.symbols}))
-//        default:
-//            return []
-//        }
-//    }
+    var firstUnknown: String? {
+        switch self {
+        case .unknownSymbol(let symbol):
+            return symbol
+        case .expression(let expressions):
+            return expressions.compactMap({$0.firstUnknown}).first
+        default:
+            return nil
+        }
+    }
+    
+    init(word: Word) {
+        
+        let knownSymbols = [ "print" ]
+        
+        switch word {
+        case .invalid(let expr):
+            self = .invalid(expr)
+        case .expression(let words):
+            self = .expression(words.map(EvalExpression.init))
+        case .string(let string):
+            self = .string(string)
+        case .atom(let atom):
+            if knownSymbols.contains(atom) {
+                self = .symbol(atom)
+            }
+            else if let _ = Int(atom) {
+                self = .number(atom)
+            }
+            else {
+                self = .unknownSymbol(atom)
+            }
+        }
+    }
 }
 
 enum Expression: Equatable {
@@ -47,16 +81,20 @@ enum Expression: Equatable {
     case symbol(_: String)
     case expression(_: [Expression])
     
-    init?(word: Word) {
-        switch word {
-        case .invalid:
-            fatalError("Unexpected: invalid words should not be evaluated")
-        case .expression(let words):
-            self = .expression(words.compactMap(Expression.init))
+    init(evalExpression: EvalExpression) {
+        switch evalExpression {
+        
+        case .invalid, .unknownSymbol:
+            fatalError("Cannot be transformed into valid `Expression`")
+        
+        case .expression(let expressions):
+            self = .expression(expressions.map(Expression.init))
+        case .number(let number):
+            self = .number(number)
         case .string(let string):
             self = .string(string)
-        case .atom(let atom):
-            self = .symbol(atom)
+        case .symbol(let string):
+            self = .symbol(string)
         }
     }
 }
@@ -131,23 +169,19 @@ class Transcoder {
     }
     
     let knownSymbols = [ "print" ]
-        
+    
     func evaluate(words: [Word]) -> Evaluation {
-        /// Check for invalid words e.g. ("blast)))
-        if let invalidExpr = words.compactMap({$0.invalidExpression}).first {
-            return .invalid(expression: invalidExpr)
+        
+        let evalExpressions = words.map({EvalExpression(word: $0)})
+        if let invalid = evalExpressions.compactMap({$0.firstInvalid}).first {
+            return .invalid(expression: invalid)
+        }
+        if let unknown = evalExpressions.compactMap({$0.firstUnknown}).first {
+            return .unknown(symbol: unknown)
         }
         
-        
-        //
-        // TODO: refactor this to use a function that evaluates a word and give either an error or valid expression
-        //       get rid of the `Expression.init`
-        
-//        if let unknownSymbol = words.flatMap({$0.symbols}).filter({knownSymbols.contains($0) == false}).first {
-//            return .unknown(symbol: unknownSymbol)
-//        }
-        
-        return .valid(expressions: words.compactMap(Expression.init))
+        let expressions = evalExpressions.map(Expression.init)
+        return .valid(expressions: expressions)
     }
     
     func transcode(expression: Expression) -> String {

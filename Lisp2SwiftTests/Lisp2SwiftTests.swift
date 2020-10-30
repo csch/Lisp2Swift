@@ -29,7 +29,7 @@ class Lisp2SwiftTests: XCTestCase {
     }
     
     func test_scan_stringAndSymbol() {
-        XCTAssertEqual(scan("\"hello\" foo"), [.string("\"hello\""), .symbol("foo")])
+        XCTAssertEqual(scan("\"hello\" foo"), [.string("\"hello\""), .atom("foo")])
     }
     
     func test_scan_expressionWithDoubleQuotedString() {
@@ -37,7 +37,7 @@ class Lisp2SwiftTests: XCTestCase {
     }
     
     func test_scan_multiAtomExpressionWithSpaces() {
-        XCTAssertEqual(scan("   (test foo) "), [.expression([.symbol("test"), .symbol("foo")])])
+        XCTAssertEqual(scan("   (test foo) "), [.expression([.atom("test"), .atom("foo")])])
     }
     
     func test_scan_emptyExpression() {
@@ -45,7 +45,7 @@ class Lisp2SwiftTests: XCTestCase {
     }
     
     func test_scan_multipleParameterExpression() {
-        XCTAssertEqual(scan("(hello world)"), [.expression([.symbol("hello"), .symbol("world")])])
+        XCTAssertEqual(scan("(hello world)"), [.expression([.atom("hello"), .atom("world")])])
     }
     
     func test_scan_unEndedExpression() {
@@ -61,7 +61,7 @@ class Lisp2SwiftTests: XCTestCase {
     }
     
     func test_scan_expressionsWithNewLine() {
-        let expected: [Word] = [.expression([.symbol("foo")]), .expression([.symbol("bar")])]
+        let expected: [Word] = [.expression([.atom("foo")]), .expression([.atom("bar")])]
         XCTAssertEqual(scan("(foo)\n(bar)"), expected)
     }
     
