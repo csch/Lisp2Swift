@@ -19,6 +19,22 @@ class Lisp2SwiftTests: XCTestCase {
         return transcoder.transcode(expressions: result.expressions!)
     }
     
+    // scan2 dev tests
+    
+    func test_scan2_ABCText() {
+        XCTAssertEqual(transcoder.scan2("\"ABC\""), [.string("\"ABC\"")])
+    }
+    
+    func test_scan2_ABC_DEF_Text() {
+        XCTAssertEqual(transcoder.scan2("\"ABC\" \"DEF\" "), [.string("\"ABC\""), .string("\"DEF\"")])
+    }
+    
+    func test_scan2_ABC_AtomF_Text() {
+        XCTAssertEqual(transcoder.scan2("\"ABC\" f "), [.string("\"ABC\""), .atom("f")])
+    }
+    
+    // scan
+    
     func test_scan_emptyText() {
         XCTAssertEqual(scan(""), [])
     }
