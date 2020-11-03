@@ -1,20 +1,17 @@
 import Foundation
 
-extension Transcoder {
+func evaluate(words: [Word]) -> Evaluation {
     
-    func evaluate(words: [Word]) -> Evaluation {
-        
-        let evalExpressions = words.map({EvalExpression(word: $0)})
-        if let invalid = evalExpressions.compactMap({$0.firstInvalid}).first {
-            return .invalid(expression: invalid)
-        }
-        if let unknown = evalExpressions.compactMap({$0.firstUnknown}).first {
-            return .unknown(symbol: unknown)
-        }
-        
-        let expressions = evalExpressions.map(Expression.init)
-        return .valid(expressions: expressions)
+    let evalExpressions = words.map({EvalExpression(word: $0)})
+    if let invalid = evalExpressions.compactMap({$0.firstInvalid}).first {
+        return .invalid(expression: invalid)
     }
+    if let unknown = evalExpressions.compactMap({$0.firstUnknown}).first {
+        return .unknown(symbol: unknown)
+    }
+    
+    let expressions = evalExpressions.map(Expression.init)
+    return .valid(expressions: expressions)
 }
 
 enum Evaluation: Equatable {

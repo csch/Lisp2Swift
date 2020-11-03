@@ -1,36 +1,16 @@
 import XCTest
 
 class Lisp2SwiftTests: XCTestCase {
-
-    let transcoder = Transcoder()
-        
-    func scan(_ text: String) -> [Word] {
-        return transcoder.scan(text)
-    }
     
     func eval(_ text: String) -> Evaluation {
         let words = scan(text)
-        return transcoder.evaluate(words: words)
+        return evaluate(words: words)
     }
     
     func l2s(_ text: String) -> String {
         let words = scan(text)
-        let result = transcoder.evaluate(words: words)
-        return transcoder.transcode(expressions: result.expressions!)
-    }
-    
-    // scan2 dev tests
-    
-    func test_scan2_ABCText() {
-        XCTAssertEqual(transcoder.scan2("\"ABC\""), [.string("\"ABC\"")])
-    }
-    
-    func test_scan2_ABC_DEF_Text() {
-        XCTAssertEqual(transcoder.scan2("\"ABC\" \"DEF\" "), [.string("\"ABC\""), .string("\"DEF\"")])
-    }
-    
-    func test_scan2_ABC_AtomF_Text() {
-        XCTAssertEqual(transcoder.scan2("\"ABC\" f "), [.string("\"ABC\""), .atom("f")])
+        let result = evaluate(words: words)
+        return transcode(expressions: result.expressions!)
     }
     
     // scan
@@ -132,7 +112,7 @@ class Lisp2SwiftTests: XCTestCase {
                                 for: lisp)
     }
     
-    func test_scan_lowerThanExpression() {
+    func test_eval_lowerThanExpression() {
         let lisp = """
         (< 4 5)
         """
