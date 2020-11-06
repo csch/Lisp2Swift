@@ -28,6 +28,7 @@ enum EvalExpression: Equatable {
     case invalid(_: String)
     case unknownSymbol(_: String)
     case expression(_: [EvalExpression])
+    case vector(_: [EvalExpression])
     
     var firstInvalid: String? {
         switch self {
@@ -62,6 +63,8 @@ enum EvalExpression: Equatable {
             self = .invalid(expr)
         case .expression(let words):
             self = .expression(words.map(EvalExpression.init))
+        case .vector(let words):
+            self = .vector(words.map(EvalExpression.init))
         case .string(let string):
             self = .string(string)
         case .atom(let atom):

@@ -67,6 +67,15 @@ class Lisp2SwiftTests: XCTestCase {
         ])]
         XCTAssertEqual(scan("(print (+ 1 2 3))"), expected)
     }
+    
+    func test_scan_defn() {
+        let expected: [Word] = [.expression([
+            .atom("defn"),
+            .vector([.atom("arg1")]),
+            .expression([.atom("+"), .atom("arg1"), .atom("arg1")])
+        ])]
+        XCTAssertEqual(scan("(defn [arg1] (+ arg1 arg1))"), expected)
+    }
         
     /// EVAL
     

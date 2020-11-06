@@ -5,6 +5,7 @@ enum Expression: Equatable {
     case number(_: String)
     case symbol(_: String)
     case expression(_: [Expression])
+    case vector(_: [Expression])
     
     init(evalExpression: EvalExpression) {
         switch evalExpression {
@@ -14,6 +15,8 @@ enum Expression: Equatable {
         
         case .expression(let expressions):
             self = .expression(expressions.map(Expression.init))
+        case .vector(let expressions):
+            self = .vector(expressions.map(Expression.init))
         case .number(let number):
             self = .number(number)
         case .string(let string):
@@ -35,6 +38,9 @@ func transcode(expression: Expression) -> String {
         
     case .number(let number):
         return number
+        
+    case .vector(let expressions):
+        fatalError("Not implemented")
         
     case .expression(let expressions):
         // TODO: go through the sub expressions and apply them

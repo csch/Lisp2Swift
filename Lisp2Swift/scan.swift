@@ -4,6 +4,7 @@ enum Word: Equatable {
     case string(_: String)
     case atom(_: String)
     case expression(_: [Word])
+    case vector(_: [Word])
     case invalid(_: String)
 }
 
@@ -43,6 +44,10 @@ let strategies = [
     Strategy(start: "(", end: ")", stopAtWhitespace: false, allowNesting: true, process: { extraction in
         return [extraction.targetCharacterFound ?
                     .expression(scan(extraction.text.shrunken)) : .invalid(extraction.text)]
+    }),
+    Strategy(start: "[", end: "]", stopAtWhitespace: false, allowNesting: true, process: { extraction in
+        return [extraction.targetCharacterFound ?
+                    .vector(scan(extraction.text.shrunken)) : .invalid(extraction.text)]
     }),
     Strategy(start: nil, end: nil, stopAtWhitespace: true, allowNesting: false, process: { extraction in
         if extraction.text.contains("(") || extraction.text.contains(")") {
