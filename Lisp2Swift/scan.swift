@@ -6,6 +6,13 @@ enum Word: Equatable {
     case expression(_: [Word])
     case vector(_: [Word])
     case invalid(_: String)
+    
+    var isExpression: Bool {
+        if case .expression = self {
+            return true
+        }
+        return false
+    }
 }
 
 struct Extraction {

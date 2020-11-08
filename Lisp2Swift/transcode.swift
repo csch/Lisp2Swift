@@ -1,40 +1,13 @@
 import Foundation
 
-enum Expression: Equatable {
-    case string(_: String)
-    case number(_: String)
-    case symbol(_: String)
-    case expression(_: [Expression])
-    case vector(_: [Expression])
-    
-    init(evalExpression: EvalExpression) {
-        switch evalExpression {
-        
-        case .invalid, .unknownSymbol:
-            fatalError("Cannot be transformed into valid `Expression`")
-        
-        case .expression(let expressions):
-            self = .expression(expressions.map(Expression.init))
-        case .vector(let expressions):
-            self = .vector(expressions.map(Expression.init))
-        case .number(let number):
-            self = .number(number)
-        case .string(let string):
-            self = .string(string)
-        case .symbol(let string):
-            self = .symbol(string)
-        }
-    }
-}
-
 func transcode(expression: Expression) -> String {
     
     switch expression {
     case .string(let string):
         return string
         
-    case .symbol(let symbol):
-        return symbol
+    case .fncall(let fnCall):
+        fatalError("Implement me")
         
     case .number(let number):
         return number
