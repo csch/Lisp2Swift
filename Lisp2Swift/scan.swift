@@ -71,7 +71,7 @@ let strategies = [
     Strategy(start: "[", end: "]", stopAtWhitespace: false, allowNesting: true, process: { extraction in
         if extraction.targetCharacterFound {
             let result = scan(extraction.text.shrunken)
-            return result.map({[.expression($0)]})
+            return result.map({[.vector($0)]})
         }
         else {
             return .failure(.invalidExpression(extraction.text))
