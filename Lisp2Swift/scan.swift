@@ -36,7 +36,7 @@ struct Strategy {
     let end: Character?
     let stopAtWhitespace: Bool
     let allowNesting: Bool
-    let process: ((Extraction) -> Result<[Word], ScanError>)
+    let process: ((Extraction) throws -> [Word])
         
     func matches(character: Character) -> Bool {
         if let start = start {
@@ -56,39 +56,40 @@ struct Strategy {
 
 let strategies = [
     Strategy(start: "\"", end: "\"", stopAtWhitespace: false, allowNesting: false, process: { extraction in
-        return extraction.targetCharacterFound ?
-            .success([.string(extraction.text)]) : .failure(ScanError.invalidExpression(extraction.text))
+        if extraction.targetCharacterFound  {
+            return [.string(extraction.text)]
+        }
+        else {
+            throw ScanError.invalidExpression(extraction.text)
+        }
     }),
     Strategy(start: "(", end: ")", stopAtWhitespace: false, allowNesting: true, process: { extraction in
         if extraction.targetCharacterFound {
-            let result = scan(extraction.text.shrunken)
-            return result.map({[.expression($0)]})
+            return [.expression(try scan(extraction.text.shrunken))]
         }
         else {
-            return .failure(.invalidExpression(extraction.text))
+            throw ScanError.invalidExpression(extraction.text)
         }
     }),
     Strategy(start: "[", end: "]", stopAtWhitespace: false, allowNesting: true, process: { extraction in
         if extraction.targetCharacterFound {
-            let result = scan(extraction.text.shrunken)
-            return result.map({[.vector($0)]})
+            return [.vector(try scan(extraction.text.shrunken))]
         }
         else {
-            return .failure(.invalidExpression(extraction.text))
+            throw ScanError.invalidExpression(extraction.text)
         }
     }),
     Strategy(start: nil, end: nil, stopAtWhitespace: true, allowNesting: false, process: { extraction in
         if extraction.text.contains("(") || extraction.text.contains(")") {
-            return .failure(.invalidExpression(extraction.text))
+            throw ScanError.invalidExpression(extraction.text)
         }
         let result: Word
         if Int(extraction.text) != nil || Double(extraction.text) != nil {
-            result = .number(extraction.text)
+            return [.number(extraction.text)]
         }
         else {
-            result = .atom(extraction.text)
+            return [.atom(extraction.text)]
         }
-        return .success([result])
     }),
 ]
 
@@ -106,11 +107,11 @@ private func append(index: Int, strategy: Strategy, nestingLevel: Int, from sour
     }
 }
 
-private func scan(index: Int, text: String, collected: [Word]) -> Result<[Word], ScanError> {
-    guard index < text.count else { return .success(collected) }
+private func scan(index: Int, text: String, collected: [Word]) throws -> [Word] {
+    guard index < text.count else { return collected }
     let character = text.character(at: index)
     if character == " " {
-        return scan(index: index + 1, text: text, collected: collected)
+        return try scan(index: index + 1, text: text, collected: collected)
     }
     else if let strategy = strategies.first(where: {$0.matches(character: character)}) {
         let extraction = append(
@@ -120,21 +121,16 @@ private func scan(index: Int, text: String, collected: [Word]) -> Result<[Word],
             from: text,
             to: String(character)
         )
-        let result = strategy.process(extraction)
-        switch result {
-        case .failure:
-            return result
-        case .success(let words):
-            return scan(index: index + extraction.text.count, text: text, collected: collected + words)
-        }        
+        let words = try strategy.process(extraction)
+        return try scan(index: index + extraction.text.count, text: text, collected: collected + words)
     }
     else {
-        return .success(collected)
+        return collected
     }
 }
 
-func scan(_ text: String) -> Result<[Word], ScanError> {
+func scan(_ text: String) throws -> [Word] {
     let updatedText = text.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\t", with: " ")
-    return scan(index: 0, text: updatedText, collected: [])
+    return try scan(index: 0, text: updatedText, collected: [])
 }
 

@@ -3,12 +3,11 @@ import XCTest
 class Lisp2SwiftTests: XCTestCase {
     
     func _scan(_ text: String) -> [Word] {
-        let result = scan(text)
-        switch result {
-        case .failure:
-            return []
-        case .success(let words):
-            return words
+        do {
+            return try scan(text)
+        }
+        catch {
+            return []        
         }
     }
     

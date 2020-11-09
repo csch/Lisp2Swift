@@ -2,14 +2,9 @@ import Foundation
 
 let input = Array(CommandLine.arguments.dropFirst())
 let lisp = input.joined(separator: " ")
-let scanned = scan(lisp)
-
-switch scanned {
-
-case .failure(let error):
-    print("[ScanError]: \(error)")
-case .success(let words):
-    switch evaluate(words: words) {
+do {
+    let scanned = try scan(lisp)
+    switch evaluate(words: scanned) {
     case .failure(let error):
         print("[EvalError]: \(error)")
     case .success(let expressions):
@@ -17,4 +12,8 @@ case .success(let words):
         print(code)
     }
 }
+catch {
+    print("[ScanError]: \(error)")
+}
+
 
