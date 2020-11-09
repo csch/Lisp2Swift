@@ -32,6 +32,14 @@ class Lisp2SwiftTests: XCTestCase {
         XCTAssertEqual(_scan(""), [])
     }
     
+    func test_scan_Integer() {
+        XCTAssertEqual(_scan("123"), [.number("123")])
+    }
+    
+    func test_scan_Double() {
+        XCTAssertEqual(_scan("123.12"), [.number("123.12")])
+    }
+    
     func test_scan_doubleQuotedString() {
         XCTAssertEqual(_scan("\"hello\""), [.string("\"hello\"")])
     }
@@ -76,7 +84,7 @@ class Lisp2SwiftTests: XCTestCase {
     func test_scan_nestedExpression() {
         let expected: [Word] = [.expression([
             .atom("print"),
-            .expression([.atom("+"), .atom("1"), .atom("2"), .atom("3")])
+            .expression([.atom("+"), .number("1"), .number("2"), .number("3")])
         ])]
         XCTAssertEqual(_scan("(print (+ 1 2 3))"), expected)
     }

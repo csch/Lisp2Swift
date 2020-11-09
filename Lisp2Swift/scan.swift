@@ -81,7 +81,14 @@ let strategies = [
         if extraction.text.contains("(") || extraction.text.contains(")") {
             return .failure(.invalidExpression(extraction.text))
         }
-        return .success([.atom(extraction.text)])
+        let result: Word
+        if Int(extraction.text) != nil || Double(extraction.text) != nil {
+            result = .number(extraction.text)
+        }
+        else {
+            result = .atom(extraction.text)
+        }
+        return .success([result])
     }),
 ]
 
