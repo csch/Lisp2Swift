@@ -18,3 +18,10 @@ extension String {
         return substring(from: 1, length: self.count-2)
     }
 }
+
+extension Array {
+    
+    var butFirst: Self {
+        return Array(self[1..<count])
+    }
+}

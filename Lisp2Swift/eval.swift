@@ -22,15 +22,40 @@ enum EvalError: Error {
 }
 
 func evaluate(words: [Word]) -> Result<[Expression], EvalError> {
-    // on top level only expressions are valid
-    if words.filter({$0.isExpression == false}).count > 0 {
+//    // on top level only expressions are valid
+//    if words.filter({$0.isExpression == false}).count > 0 {
+//        return .failure(.foo)
+//    }
+    do {
+        return .success(try words.map({ try evaluate(word: $0)}))
+    }
+    catch {
         return .failure(.foo)
     }
-    return evaluate(remaining: words, expressions: [])
 }
 
-func evaluate(remaining: [Word], expressions: [Expression]) -> Result<[Expression], EvalError> {    
-    return .success([])
+// TODO: need to restructure this
+private func evaluate(word: Word) throws -> Expression {
+    switch word {
+    case .expression(let words):
+        guard let firstAtom = words.first?.atom else { throw EvalError.foo }
+        // let symbols = words.butFirst.compactMap({$0.atom})
+        // TODO: check if symbols are declared
+        if let fn = declaredFunctions[firstAtom], fn.args.count == words.butFirst.count {
+            return .fncall(FnCall(name: fn.name, args: try words.butFirst.map({try evaluate(word: $0)})))
+        }
+        else {
+            throw EvalError.foo
+        }
+    case .vector(let words):
+        return .vector(try words.map({try evaluate(word: $0)}))
+    case .atom:
+        fatalError("Not implemented")
+    case .number(let number):
+        return .number(number)
+    case .string(let string):
+        return .string(string)
+    }
 }
 
 enum Expression: Equatable {

@@ -2,14 +2,22 @@ import XCTest
 
 class Lisp2SwiftTests: XCTestCase {
     
+    func _scan(_ text: String) -> [Word] {
+        let result = scan(text)
+        switch result {
+        case .failure:
+            return []
+        case .success(let words):
+            return words
+        }
+    }
+    
     func eval(_ text: String) -> Result<[Expression], EvalError> {
-        let words = scan(text)
-        return evaluate(words: words)
+        return evaluate(words: _scan(text))
     }
     
     func l2s(_ text: String) -> String {
-        let words = scan(text)
-        let result = evaluate(words: words)
+        let result = eval(text)
         switch result {
         case .failure:
             return ""
@@ -21,48 +29,48 @@ class Lisp2SwiftTests: XCTestCase {
     // scan
     
     func test_scan_emptyText() {
-        XCTAssertEqual(scan(""), [])
+        XCTAssertEqual(_scan(""), [])
     }
     
     func test_scan_doubleQuotedString() {
-        XCTAssertEqual(scan("\"hello\""), [.string("\"hello\"")])
+        XCTAssertEqual(_scan("\"hello\""), [.string("\"hello\"")])
     }
     
     func test_scan_stringAndSymbol() {
-        XCTAssertEqual(scan("\"hello\" foo"), [.string("\"hello\""), .atom("foo")])
+        XCTAssertEqual(_scan("\"hello\" foo"), [.string("\"hello\""), .atom("foo")])
     }
     
     func test_scan_expressionWithDoubleQuotedString() {
-        XCTAssertEqual(scan("(\"hello\")"), [.expression([.string("\"hello\"")])])
+        XCTAssertEqual(_scan("(\"hello\")"), [.expression([.string("\"hello\"")])])
     }
     
     func test_scan_multiAtomExpressionWithSpaces() {
-        XCTAssertEqual(scan("   (test foo) "), [.expression([.atom("test"), .atom("foo")])])
+        XCTAssertEqual(_scan("   (test foo) "), [.expression([.atom("test"), .atom("foo")])])
     }
     
     func test_scan_emptyExpression() {
-        XCTAssertEqual(scan("()"), [.expression([])])
+        XCTAssertEqual(_scan("()"), [.expression([])])
     }
     
     func test_scan_multipleParameterExpression() {
-        XCTAssertEqual(scan("(hello world)"), [.expression([.atom("hello"), .atom("world")])])
+        XCTAssertEqual(_scan("(hello world)"), [.expression([.atom("hello"), .atom("world")])])
     }
     
     func test_scan_unEndedExpression() {
-        XCTAssertEqual(scan("("), [.invalid("(")])
+        XCTAssertEqual(_scan("("), [])
     }
     
     func test_scan_unStartedExpression() {
-        XCTAssertEqual(scan(")"), [.invalid(")")])
+        XCTAssertEqual(_scan(")"), [])
     }
     
     func test_scan_invalidExpression() {
-        XCTAssertEqual(scan("basdf(foo"), [.invalid("basdf(foo")])
+        XCTAssertEqual(_scan("basdf(foo"), [])
     }
     
     func test_scan_expressionsWithNewLine() {
         let expected: [Word] = [.expression([.atom("foo")]), .expression([.atom("bar")])]
-        XCTAssertEqual(scan("(foo)\n(bar)"), expected)
+        XCTAssertEqual(_scan("(foo)\n(bar)"), expected)
     }
     
     func test_scan_nestedExpression() {
@@ -70,7 +78,7 @@ class Lisp2SwiftTests: XCTestCase {
             .atom("print"),
             .expression([.atom("+"), .atom("1"), .atom("2"), .atom("3")])
         ])]
-        XCTAssertEqual(scan("(print (+ 1 2 3))"), expected)
+        XCTAssertEqual(_scan("(print (+ 1 2 3))"), expected)
     }
     
     func test_scan_defn() {
@@ -79,7 +87,7 @@ class Lisp2SwiftTests: XCTestCase {
             .vector([.atom("arg1")]),
             .expression([.atom("+"), .atom("arg1"), .atom("arg1")])
         ])]
-        XCTAssertEqual(scan("(defn [arg1] (+ arg1 arg1))"), expected)
+        XCTAssertEqual(_scan("(defn [arg1] (+ arg1 arg1))"), expected)
     }
         
     /// EVAL
