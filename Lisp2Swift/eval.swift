@@ -11,8 +11,13 @@ var declaredFunctions = [
                         return a
                     }
                     """)),
+    
     "==" : FnDecl(name: "==",
                  args: ["a, b"],
+                 body: .none),
+    
+    "print" : FnDecl(name: "print",
+                 args: ["a"],
                  body: .none)
 ]
 
@@ -38,6 +43,7 @@ func evaluate(words: [Word]) -> Result<[Expression], EvalError> {
 private func evaluate(word: Word) throws -> Expression {
     switch word {
     case .expression(let words):
+        // parse function call
         guard let firstAtom = words.first?.atom else { throw EvalError.foo }
         // let symbols = words.butFirst.compactMap({$0.atom})
         // TODO: check if symbols are declared
