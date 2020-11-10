@@ -121,10 +121,10 @@ class Lisp2SwiftTests: XCTestCase {
     
     func test_eval_foo_expression() throws {
         let lisp = """
-        (foo "hi")
+        (fox "hi")
         """
         let result = eval(lisp)
-        XCTAssertEqual(result, .failure(.undeclaredFunction))
+        XCTAssertEqual(result, .failure(.undeclaredFunction("fox")))
     }
 
     func test_eval_number_expression() throws {
@@ -176,7 +176,36 @@ class Lisp2SwiftTests: XCTestCase {
         )
         assertExpression(with: [fndecl], for: lisp)
     }
-
+    
+    func test_eval_equals() {
+        let lisp = """
+        (== 1 2)
+        """
+        let fncall = Expression.fncall(
+            FnCall(name: "isEqual",
+                   args: [.number("1"), .number("2")])
+        )
+        assertExpression(with: [fncall], for: lisp)
+    }
+    
+    func test_eval_if() {
+        let lisp = """
+        (if (== 1 2) (print "equal") (print "not equal"))
+        """
+        let equals = Expression.fncall(
+            FnCall(name: "isEqual",
+                   args: [.number("1"), .number("2")])
+        )
+        let print1 = Expression.fncall(
+            FnCall(name: "print",
+                   args: [.string("equal")])
+        )
+        let print2 = Expression.fncall(
+            FnCall(name: "print",
+                   args: [.string("equal")])
+        )
+        XCTFail("Hmm should if be a function or a special `conditional`")
+    }
     
     /// TRANSCODE
     

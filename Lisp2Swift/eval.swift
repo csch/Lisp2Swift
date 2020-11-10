@@ -2,6 +2,12 @@ import Foundation
 
 /// Function mappings
 
+
+func sanitiseFunction(name: String) -> String {
+    name.replacingOccurrences(of: "-", with: "_")
+}
+
+// TODO: this shouldn't be a global variable (because tests currently reuse it)
 var declaredFunctions = [
     "+" : FnDecl(name: "add",
                  args: ["a", "b"],
@@ -18,6 +24,10 @@ var declaredFunctions = [
     
     "print" : FnDecl(name: "print",
                  args: ["a"],
+                 body: .none),
+    
+    "readline" : FnDecl(name: "readLine",
+                 args: [],
                  body: .none)
 ]
 
@@ -36,11 +46,10 @@ func evaluate(words: [Word], scopeSymbols: [String] = []) throws -> [Expression]
 }
 
 private func parseFunctionDeclaration(name: String, remainder: [Word]) throws -> FnDecl {
-    guard declaredFunctions[name] == nil  else { throw EvalError.functionAlreadyExists(name) }
     let vector = remainder.first?.vector
     if let args = vector?.compactMap({$0.atom}), args.count == vector?.count {
         let expressions = try evaluate(words: remainder.butFirst, scopeSymbols: args)
-        return FnDecl(name: name, args: args, body: FnBody.lisp(expressions: expressions))
+        return FnDecl(name: sanitiseFunction(name: name), args: args, body: FnBody.lisp(expressions: expressions))
     }
     throw EvalError.invalidFunctionDeclaration
 }
@@ -48,7 +57,7 @@ private func parseFunctionDeclaration(name: String, remainder: [Word]) throws ->
 private func parseFunctionCall(name: String, remainder: [Word], scopeSymbols: [String]) throws -> Expression {
     if let fn = declaredFunctions[name] {
         if fn.args.count == remainder.count {
-            return .fncall(FnCall(name: fn.name, args: try remainder.map({try evaluate(word: $0, scopeSymbols: scopeSymbols)})))
+            return .fncall(FnCall(name: sanitiseFunction(name: fn.name), args: try remainder.map({try evaluate(word: $0, scopeSymbols: scopeSymbols)})))
         }
         else {
             throw EvalError.incorrectArguments(remainder)
@@ -67,8 +76,9 @@ private func evaluate(word: Word, scopeSymbols: [String]) throws -> Expression {
         let remainder = words.butFirst
         
         if firstAtom == "defn", let name = remainder.first?.atom {
+            guard declaredFunctions[name] == nil else { throw EvalError.functionAlreadyExists(name) }
             let decl = try parseFunctionDeclaration(name: name, remainder: remainder.butFirst)
-            declaredFunctions[decl.name] = decl
+            declaredFunctions[name] = decl
             return .fndecl(decl)
         }
         else {
@@ -110,7 +120,7 @@ struct FnDecl: Equatable {
     let name: String
     let args: [String]
     let body: FnBody
-    
+  
     var specialSwiftCode: String? {
         if case .special(let code) = body {
             return code
