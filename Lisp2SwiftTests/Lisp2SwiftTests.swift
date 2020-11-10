@@ -12,7 +12,12 @@ class Lisp2SwiftTests: XCTestCase {
     }
     
     func eval(_ text: String) -> Result<[Expression], EvalError> {
-        return evaluate(words: _scan(text))
+        do {
+            return .success(try evaluate(words: _scan(text)))
+        }
+        catch {
+            return .failure(error as! EvalError)
+        }
     }
     
     func l2s(_ text: String) -> String {
@@ -100,7 +105,7 @@ class Lisp2SwiftTests: XCTestCase {
     /// EVAL
     
     func assertExpression(with expressions: [Expression], for lisp: String, file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertEqual(eval(lisp), .success([.expression(expressions)]), file: file, line: line)
+        XCTAssertEqual(eval(lisp), .success(expressions), file: file, line: line)
     }
     
     func test_eval_print_expression() throws {
@@ -110,41 +115,54 @@ class Lisp2SwiftTests: XCTestCase {
         assertExpression(with: [
                             .fncall(FnCall(
                                         name: "print",
-                                        args: [.string("hi")]
+                                        args: [.string("\"hi\"")]
                             ))], for: lisp)
     }
     
-//    func test_eval_foo_expression() throws {
-//        let lisp = """
-//        (foo "hi")
-//        """
-//        let result = eval(lisp)
-//        XCTAssertEqual(result, .unknown(symbol: "foo"))
-//    }
-//
-//    func test_eval_number_expression() throws {
-//        let lisp = """
-//        (print 123)
-//        """
-//        assertExpression(with: [.symbol("print"), .number("123")], for: lisp)
-//    }
-//
-//    func test_eval_add_expression() throws {
-//        let lisp = """
-//        (+ 1 2 3)
-//        """
-//        assertExpression(with: [.symbol("+"), .number("1"), .number("2"), .number("3")], for: lisp)
-//    }
-//
-//    func test_eval_nested_expression() throws {
-//        let lisp = """
-//        (print (+ 1 2 3))
-//        """
-//        assertExpression(with: [.symbol("print"),
-//                                .expression([.symbol("+"), .number("1"), .number("2"), .number("3")])],
-//                                for: lisp)
-//    }
-//
+    func test_eval_foo_expression() throws {
+        let lisp = """
+        (foo "hi")
+        """
+        let result = eval(lisp)
+        XCTAssertEqual(result, .failure(.undeclaredFunction))
+    }
+
+    func test_eval_number_expression() throws {
+        let lisp = """
+        (print 123)
+        """
+        assertExpression(with: [
+                            .fncall(FnCall(
+                                        name: "print",
+                                        args: [.number("123")]
+                            ))], for: lisp)
+    }
+
+    func test_eval_add_expression() throws {
+        let lisp = """
+        (+ 1 2)
+        """
+        assertExpression(with: [
+                            .fncall(FnCall(
+                                        name: "add",
+                                        args: [.number("1"), .number("2")]
+                            ))], for: lisp)
+    }
+
+    func test_eval_nested_expression() throws {
+        let lisp = """
+        (print (+ 1 2))
+        """
+        assertExpression(with: [
+                            .fncall(FnCall(
+                                        name: "print",
+                                        args: [.fncall(FnCall(
+                                            name: "add",
+                                            args: [.number("1"), .number("2")]))
+                                                       ]
+                                ))], for: lisp)
+    }
+
 //    func test_eval_lowerThanExpression() {
 //        let lisp = """
 //        (< 4 5)
@@ -152,16 +170,19 @@ class Lisp2SwiftTests: XCTestCase {
 //        assertExpression(with: [.symbol("<"), .number("4"), .number("5")], for: lisp)
 //    }
 //
-//    func test_eval_defn() {
-//        let lisp = """
-//        (defn [arg1] (+ arg1 arg1))
-//        """
-//        assertExpression(with: [.symbol("defn"),
-//                                .vector([.symbol("arg1")]),
-//                                .expression([.symbol("+"),
-//                                             .symbol("arg1"),
-//                                             .symbol("arg1")])], for: lisp)
-//    }
+    func test_eval_defn() {
+        let lisp = """
+        (defn foo [arg1] (+ arg1 arg1))
+        """
+        let fncall = Expression.fncall(
+            FnCall(name: "add",
+                   args: [.number("1"), .number("2")])
+        )
+        let fndecl = Expression.fndecl(
+            FnDecl(name: "foo", args: ["arg1"], body: .lisp(expressions: [fncall]))
+        )
+        assertExpression(with: [fndecl], for: lisp)
+    }
 
     
     /// TRANSCODE

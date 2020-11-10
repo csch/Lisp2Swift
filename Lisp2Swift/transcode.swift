@@ -5,6 +5,9 @@ func transcode(expression: Expression) -> String {
     switch expression {
     case .string(let string):
         return string
+    
+    case .fndecl(let fnDecl):
+        fatalError("Implement me")
         
     case .fncall(let fnCall):
         fatalError("Implement me")

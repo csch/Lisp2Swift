@@ -4,7 +4,7 @@ import Foundation
 
 var declaredFunctions = [
     "+" : FnDecl(name: "add",
-                 args: ["a, b"],
+                 args: ["a", "b"],
                  body: .special(swiftCode:
                     """
                     function add(a: Any, b: Any) -> Any {
@@ -13,7 +13,7 @@ var declaredFunctions = [
                     """)),
     
     "==" : FnDecl(name: "==",
-                 args: ["a, b"],
+                 args: ["a" , "b"],
                  body: .none),
     
     "print" : FnDecl(name: "print",
@@ -22,36 +22,48 @@ var declaredFunctions = [
 ]
 
 
-enum EvalError: Error {
+enum EvalError: Error, Equatable {
     case foo
+    case invalidFunctionDeclaration
+    case undeclaredFunction
+    case unknownExpression
+    case incorrectArguments(_ args: [Word])
 }
 
-func evaluate(words: [Word]) -> Result<[Expression], EvalError> {
-//    // on top level only expressions are valid
-//    if words.filter({$0.isExpression == false}).count > 0 {
-//        return .failure(.foo)
-//    }
-    do {
-        return .success(try words.map({ try evaluate(word: $0)}))
+func evaluate(words: [Word]) throws -> [Expression] {
+    return try words.map({ try evaluate(word: $0)})
+}
+
+private func parseFunctionDeclaration(name: String, remainder: [Word]) throws -> Expression {
+    throw EvalError.invalidFunctionDeclaration
+}
+
+private func parseFunctionCall(name: String, remainder: [Word]) throws -> Expression {
+    if let fn = declaredFunctions[name] {
+        if fn.args.count == remainder.count {
+            return .fncall(FnCall(name: fn.name, args: try remainder.map({try evaluate(word: $0)})))
+        }
+        else {
+            throw EvalError.incorrectArguments(remainder)
+        }
     }
-    catch {
-        return .failure(.foo)
+    else {
+        throw EvalError.undeclaredFunction
     }
 }
 
-// TODO: need to restructure this
 private func evaluate(word: Word) throws -> Expression {
     switch word {
     case .expression(let words):
-        // parse function call
-        guard let firstAtom = words.first?.atom else { throw EvalError.foo }
-        // let symbols = words.butFirst.compactMap({$0.atom})
-        // TODO: check if symbols are declared
-        if let fn = declaredFunctions[firstAtom], fn.args.count == words.butFirst.count {
-            return .fncall(FnCall(name: fn.name, args: try words.butFirst.map({try evaluate(word: $0)})))
+        
+        guard let firstAtom = words.first?.atom else { throw EvalError.unknownExpression }
+        let remainder = words.butFirst
+        
+        if firstAtom == "defn", let name = remainder.first?.atom {
+            return try parseFunctionDeclaration(name: name, remainder: remainder.butFirst)
         }
         else {
-            throw EvalError.foo
+            return try parseFunctionCall(name: firstAtom, remainder: remainder)
         }
     case .vector(let words):
         return .vector(try words.map({try evaluate(word: $0)}))
@@ -65,6 +77,7 @@ private func evaluate(word: Word) throws -> Expression {
 }
 
 enum Expression: Equatable {
+    case fndecl(_ : FnDecl)
     case fncall(_ : FnCall)
     case string(_: String)
     case number(_: String)
