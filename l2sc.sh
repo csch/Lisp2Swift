@@ -1,6 +1,4 @@
 #!/bin/bash
 
-args=("$@")
-
 path="DerivedData/Lisp2Swift/Build/Products/Debug"
-$path/Lisp2Swift $args
+$path/Lisp2Swift $@
