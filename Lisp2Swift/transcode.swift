@@ -10,7 +10,11 @@ func transcode(expression: Expression) -> String {
         fatalError("Implement me")
         
     case .fncall(let fnCall):
-        fatalError("Implement me")
+        let args = fnCall.args.map(transcode)
+        return fnCall.name + "(" + args.joined(separator: ",") + ")"
+    
+    case .symbol(let symbol):
+        return symbol
         
     case .number(let number):
         return number
