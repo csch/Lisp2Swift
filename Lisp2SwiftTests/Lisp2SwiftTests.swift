@@ -20,13 +20,13 @@ class Lisp2SwiftTests: XCTestCase {
         }
     }
     
-    func l2s(_ text: String) -> String {
+    func l2s(_ text: String) -> Result<String, EvalError> {
         let result = eval(text)
         switch result {
-        case .failure:
-            return ""
+        case .failure(let error):
+            return .failure(error)
         case .success(let expressions):
-            return transcode(expressions: expressions)
+            return .success(transcode(expressions: expressions))
         }
     }
     
@@ -163,13 +163,6 @@ class Lisp2SwiftTests: XCTestCase {
                                 ))], for: lisp)
     }
 
-//    func test_eval_lowerThanExpression() {
-//        let lisp = """
-//        (< 4 5)
-//        """
-//        assertExpression(with: [.symbol("<"), .number("4"), .number("5")], for: lisp)
-//    }
-//
     func test_eval_defn() {
         let lisp = """
         (defn foo [arg1] (+ arg1 arg1))
@@ -192,7 +185,7 @@ class Lisp2SwiftTests: XCTestCase {
         (print "hi")
         """
         let result = l2s(lisp)
-        XCTAssertEqual(result, "print(\"hi\")\n")
+        XCTAssertEqual(result, .success("print(\"hi\")\n"))
     }
     
     func test_transcode_2_print_expressions() throws {
@@ -206,23 +199,23 @@ class Lisp2SwiftTests: XCTestCase {
 
         """
         let result = l2s(lisp)
-        XCTAssertEqual(result, expected)
+        XCTAssertEqual(result, .success(expected))
     }
     
-    func test_transcode_add_expression() throws {
+    func test_transcode_invalidArgs_expression() throws {
         let lisp = """
         (+ 1 2 3)
         """
         let result = l2s(lisp)
-        XCTAssertEqual(result, "(1 + 2 + 3)\n")
+        XCTAssertEqual(result, .failure(.incorrectArguments([.number("1"), .number("2"), .number("3")])))
     }
     
-    func test_transcode_printSmaller_expression() throws {
+    func test_transcode_add_expression() throws {
         let lisp = """
-        (print (< 1 3))
+        (+ 1 2)
         """
         let result = l2s(lisp)
-        XCTAssertEqual(result, "print(1 < 3)\n")
+        XCTAssertEqual(result, .success("add(1,2)\n"))
     }
 }
 
