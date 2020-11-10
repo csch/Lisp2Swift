@@ -4,6 +4,7 @@ test.swift
 *.xcuserdatad
 *.xcuserstate
 DerivedData
+.DS_Store
 
 
 

@@ -7,7 +7,7 @@ var declaredFunctions = [
                  args: ["a", "b"],
                  body: .special(swiftCode:
                     """
-                    function add(a: Any, b: Any) -> Any {
+                    func add(_ a: Any, _ b: Any) -> Any {
                         return a
                     }
                     """)),
@@ -21,12 +21,11 @@ var declaredFunctions = [
                  body: .none)
 ]
 
-
 enum EvalError: Error, Equatable {
     case foo
     case functionAlreadyExists(_ name: String)
     case invalidFunctionDeclaration
-    case undeclaredFunction
+    case undeclaredFunction(_ name: String)
     case unknownExpression
     case unknownSymbol(_ symbol: String)
     case incorrectArguments(_ args: [Word])
@@ -36,12 +35,12 @@ func evaluate(words: [Word], scopeSymbols: [String] = []) throws -> [Expression]
     return try words.map({ try evaluate(word: $0, scopeSymbols: scopeSymbols)})
 }
 
-private func parseFunctionDeclaration(name: String, remainder: [Word]) throws -> Expression {
+private func parseFunctionDeclaration(name: String, remainder: [Word]) throws -> FnDecl {
     guard declaredFunctions[name] == nil  else { throw EvalError.functionAlreadyExists(name) }
     let vector = remainder.first?.vector
     if let args = vector?.compactMap({$0.atom}), args.count == vector?.count {
         let expressions = try evaluate(words: remainder.butFirst, scopeSymbols: args)
-        return .fndecl(FnDecl(name: name, args: args, body: FnBody.lisp(expressions: expressions)))
+        return FnDecl(name: name, args: args, body: FnBody.lisp(expressions: expressions))
     }
     throw EvalError.invalidFunctionDeclaration
 }
@@ -56,7 +55,7 @@ private func parseFunctionCall(name: String, remainder: [Word], scopeSymbols: [S
         }
     }
     else {
-        throw EvalError.undeclaredFunction
+        throw EvalError.undeclaredFunction(name)
     }
 }
 
@@ -68,7 +67,9 @@ private func evaluate(word: Word, scopeSymbols: [String]) throws -> Expression {
         let remainder = words.butFirst
         
         if firstAtom == "defn", let name = remainder.first?.atom {
-            return try parseFunctionDeclaration(name: name, remainder: remainder.butFirst)
+            let decl = try parseFunctionDeclaration(name: name, remainder: remainder.butFirst)
+            declaredFunctions[decl.name] = decl
+            return .fndecl(decl)
         }
         else {
             return try parseFunctionCall(name: firstAtom, remainder: remainder, scopeSymbols: scopeSymbols)
@@ -109,6 +110,15 @@ struct FnDecl: Equatable {
     let name: String
     let args: [String]
     let body: FnBody
+    
+    var specialSwiftCode: String? {
+        if case .special(let code) = body {
+            return code
+        }
+        else {
+            return nil
+        }
+    }        
 }
 
 struct FnCall: Equatable {

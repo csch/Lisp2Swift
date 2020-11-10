@@ -7,7 +7,18 @@ func transcode(expression: Expression) -> String {
         return string
     
     case .fndecl(let fnDecl):
-        fatalError("Implement me")
+        if case .lisp(let expressions) = fnDecl.body {
+            let args = fnDecl.args.map({"_ " + $0 + ": Any"}).joined(separator: ",")
+            let bodyBody = transcode(expressions: expressions)
+            return """
+                   func \(fnDecl.name) (\(args)) {
+                       \(bodyBody)
+                   }
+                   """
+        }
+        else {
+            return ""
+        }
         
     case .fncall(let fnCall):
         let args = fnCall.args.map(transcode)
@@ -48,5 +59,11 @@ func transcode(expression: Expression) -> String {
 
 func transcode(expressions: [Expression]) -> String {
     return expressions.map({transcode(expression: $0) + "\n"}).reduce("", +)
+}
+
+func transcode(expressions: [Expression], library: [FnDecl]) -> String {
+    let header = library.compactMap({$0.specialSwiftCode}).joined(separator: "\n")
+    let transcoded = transcode(expressions: expressions)
+    return [header, transcoded].joined(separator: "\n")
 }
 

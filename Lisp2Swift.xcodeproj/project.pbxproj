@@ -43,6 +43,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AA218B8B255AE60900B5555A /* l2sr.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = l2sr.sh; sourceTree = SOURCE_ROOT; };
+		AA218B8C255AE60900B5555A /* l2sc.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = l2sc.sh; sourceTree = SOURCE_ROOT; };
 		AA5496FE254CA44800980FAE /* eval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = eval.swift; sourceTree = "<group>"; };
 		AA549702254CA4BB00980FAE /* utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = utils.swift; sourceTree = "<group>"; };
 		AA549706254CA57A00980FAE /* transcode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = transcode.swift; sourceTree = "<group>"; };
@@ -98,6 +100,8 @@
 				AAAA0A7A254C305800C3E83E /* scan.swift */,
 				AA5496FE254CA44800980FAE /* eval.swift */,
 				AA549706254CA57A00980FAE /* transcode.swift */,
+				AA218B8C255AE60900B5555A /* l2sc.sh */,
+				AA218B8B255AE60900B5555A /* l2sr.sh */,
 			);
 			path = Lisp2Swift;
 			sourceTree = "<group>";
