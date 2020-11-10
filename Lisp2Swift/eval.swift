@@ -24,24 +24,32 @@ var declaredFunctions = [
 
 enum EvalError: Error, Equatable {
     case foo
+    case functionAlreadyExists(_ name: String)
     case invalidFunctionDeclaration
     case undeclaredFunction
     case unknownExpression
+    case unknownSymbol(_ symbol: String)
     case incorrectArguments(_ args: [Word])
 }
 
-func evaluate(words: [Word]) throws -> [Expression] {
-    return try words.map({ try evaluate(word: $0)})
+func evaluate(words: [Word], scopeSymbols: [String] = []) throws -> [Expression] {
+    return try words.map({ try evaluate(word: $0, scopeSymbols: scopeSymbols)})
 }
 
 private func parseFunctionDeclaration(name: String, remainder: [Word]) throws -> Expression {
+    guard declaredFunctions[name] == nil  else { throw EvalError.functionAlreadyExists(name) }
+    let vector = remainder.first?.vector
+    if let args = vector?.compactMap({$0.atom}), args.count == vector?.count {
+        let expressions = try evaluate(words: remainder.butFirst, scopeSymbols: args)
+        return .fndecl(FnDecl(name: name, args: args, body: FnBody.lisp(expressions: expressions)))
+    }
     throw EvalError.invalidFunctionDeclaration
 }
 
-private func parseFunctionCall(name: String, remainder: [Word]) throws -> Expression {
+private func parseFunctionCall(name: String, remainder: [Word], scopeSymbols: [String]) throws -> Expression {
     if let fn = declaredFunctions[name] {
         if fn.args.count == remainder.count {
-            return .fncall(FnCall(name: fn.name, args: try remainder.map({try evaluate(word: $0)})))
+            return .fncall(FnCall(name: fn.name, args: try remainder.map({try evaluate(word: $0, scopeSymbols: scopeSymbols)})))
         }
         else {
             throw EvalError.incorrectArguments(remainder)
@@ -52,7 +60,7 @@ private func parseFunctionCall(name: String, remainder: [Word]) throws -> Expres
     }
 }
 
-private func evaluate(word: Word) throws -> Expression {
+private func evaluate(word: Word, scopeSymbols: [String]) throws -> Expression {
     switch word {
     case .expression(let words):
         
@@ -63,12 +71,17 @@ private func evaluate(word: Word) throws -> Expression {
             return try parseFunctionDeclaration(name: name, remainder: remainder.butFirst)
         }
         else {
-            return try parseFunctionCall(name: firstAtom, remainder: remainder)
+            return try parseFunctionCall(name: firstAtom, remainder: remainder, scopeSymbols: scopeSymbols)
         }
     case .vector(let words):
-        return .vector(try words.map({try evaluate(word: $0)}))
-    case .atom:
-        fatalError("Not implemented")
+        return .vector(try words.map({try evaluate(word: $0, scopeSymbols: scopeSymbols)}))
+    case .atom(let atom):
+        if scopeSymbols.contains(atom) {
+            return .symbol(atom)
+        }
+        else {
+            throw EvalError.unknownSymbol(atom)
+        }
     case .number(let number):
         return .number(number)
     case .string(let string):
@@ -80,6 +93,7 @@ enum Expression: Equatable {
     case fndecl(_ : FnDecl)
     case fncall(_ : FnCall)
     case string(_: String)
+    case symbol(_: String)
     case number(_: String)
     case expression(_: [Expression])
     case vector(_: [Expression])

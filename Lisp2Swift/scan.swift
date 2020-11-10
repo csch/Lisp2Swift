@@ -11,6 +11,13 @@ enum Word: Equatable {
     case expression(_: [Word])
     case vector(_: [Word])
      
+    var vector: [Word]? {
+        if case .vector(let words) = self {
+            return words
+        }
+        return nil
+    }
+    
     var atom: String? {
         if case .atom(let str) = self {
             return str

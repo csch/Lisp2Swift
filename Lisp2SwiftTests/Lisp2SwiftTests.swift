@@ -176,7 +176,7 @@ class Lisp2SwiftTests: XCTestCase {
         """
         let fncall = Expression.fncall(
             FnCall(name: "add",
-                   args: [.number("1"), .number("2")])
+                   args: [.symbol("arg1"), .symbol("arg1")])
         )
         let fndecl = Expression.fndecl(
             FnDecl(name: "foo", args: ["arg1"], body: .lisp(expressions: [fncall]))
