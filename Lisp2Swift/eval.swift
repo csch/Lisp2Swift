@@ -103,9 +103,6 @@ private func evaluate(word: Word, scopeSymbols: [String]) throws -> Expression {
             return .ifelse(condition: expressions[0], ifExpression: expressions[1], elseExpression: expressions.last)
         }
         else if firstAtom == "let" {
-            // Two options to fix it:
-            // a) add all odd symbols from vector [a 1 b 2 c 3] to scopeSymbols
-            // b) ignore scope symbols
             guard let oddElements = remainder.first?.vector?.oddElements, oddElements.allSatisfy({$0.atom != nil}) else {
                 throw EvalError.invalidExpression(words)
             }
@@ -145,25 +142,6 @@ indirect enum Expression: Equatable {
     case string(_: String)
     case symbol(_: String)
     case number(_: String)
-    
-    var type: String {
-        switch self {
-        case .vector:
-            return "vector"
-        case .string:
-            return "string"
-        case .number:
-            return "number"
-        case .symbol:
-            return "symbol"
-        case .fndecl:
-            return "fndecl"
-        case .fncall:
-            return "fncall"
-        default:
-            return "<TODO>"
-        }
-    }
 }
 
 enum FnBody: Equatable {

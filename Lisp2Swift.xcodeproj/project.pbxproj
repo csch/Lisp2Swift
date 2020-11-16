@@ -125,6 +125,7 @@
 				AA9027F72549C72E000F3616 /* Sources */,
 				AA9027F82549C72E000F3616 /* Frameworks */,
 				AA9027F92549C72E000F3616 /* CopyFiles */,
+				AA878A8B2562EE4700EA40D2 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -198,6 +199,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		AA878A8B2562EE4700EA40D2 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "file=\"unused-swift.rb\"\nif [ -f \"$file\" ]\nthen\necho \"$file found.\"\nruby $file xcode\nelse\necho \"$file doesn't exist\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		AA9027F72549C72E000F3616 /* Sources */ = {
