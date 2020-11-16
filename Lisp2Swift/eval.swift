@@ -18,9 +18,22 @@ var declaredFunctions = [
                     }
                     """)),
     
-    "==" : FnDecl(name: "==",
+    "==" : FnDecl(name: "equal",
                  args: ["a" , "b"],
-                 body: .none),
+                 body: .special(swiftCode:
+                    """
+                    func equal(_ a: Any, _ b: Any) -> Bool {
+                        if let lh = a as? NSNumber, let rh = b as? NSNumber {
+                            return lh == rh
+                        }
+                        else if let lh = a as? String, let rh = b as? String {
+                            return lh == rh
+                        }
+                        else {
+                            return false
+                        }
+                    }
+                    """)),
     
     "print" : FnDecl(name: "print",
                  args: ["a"],
@@ -36,7 +49,7 @@ enum EvalError: Error, Equatable {
     case functionAlreadyExists(_ name: String)
     case invalidFunctionDeclaration
     case undeclaredFunction(_ name: String)
-    case unknownExpression
+    case invalidExpression(_ words: [Word])
     case unknownSymbol(_ symbol: String)
     case incorrectArguments(_ args: [Word])
 }
@@ -72,14 +85,22 @@ private func evaluate(word: Word, scopeSymbols: [String]) throws -> Expression {
     switch word {
     case .expression(let words):
         
-        guard let firstAtom = words.first?.atom else { throw EvalError.unknownExpression }
+        guard let firstAtom = words.first?.atom else { throw EvalError.invalidExpression(words) }
         let remainder = words.butFirst
         
-        if firstAtom == "defn", let name = remainder.first?.atom {
+        if firstAtom == "defn" {
+            guard let name = remainder.first?.atom else { throw EvalError.invalidFunctionDeclaration }
             guard declaredFunctions[name] == nil else { throw EvalError.functionAlreadyExists(name) }
             let decl = try parseFunctionDeclaration(name: name, remainder: remainder.butFirst)
             declaredFunctions[name] = decl
             return .fndecl(decl)
+        }
+        else if firstAtom == "if" {
+            let expressions = try remainder.map({try evaluate(word: $0, scopeSymbols: scopeSymbols)})
+            guard expressions.count == 2 || expressions.count == 3 else {
+                throw EvalError.invalidExpression(words)
+            }
+            return .ifelse(condition: expressions[0], ifExpression: expressions[1], elseExpression: expressions.last)
         }
         else {
             return try parseFunctionCall(name: firstAtom, remainder: remainder, scopeSymbols: scopeSymbols)
@@ -100,14 +121,15 @@ private func evaluate(word: Word, scopeSymbols: [String]) throws -> Expression {
     }
 }
 
-enum Expression: Equatable {
+indirect enum Expression: Equatable {
     case fndecl(_ : FnDecl)
     case fncall(_ : FnCall)
+    case ifelse(condition: Expression, ifExpression: Expression, elseExpression: Expression?)
+    case expression(_: [Expression])
+    case vector(_: [Expression])
     case string(_: String)
     case symbol(_: String)
     case number(_: String)
-    case expression(_: [Expression])
-    case vector(_: [Expression])
 }
 
 enum FnBody: Equatable {

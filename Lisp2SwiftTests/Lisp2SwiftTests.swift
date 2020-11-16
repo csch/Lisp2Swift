@@ -175,14 +175,14 @@ class Lisp2SwiftTests: XCTestCase {
             FnDecl(name: "foo", args: ["arg1"], body: .lisp(expressions: [fncall]))
         )
         assertExpression(with: [fndecl], for: lisp)
-    }
+    }        
     
     func test_eval_equals() {
         let lisp = """
         (== 1 2)
         """
         let fncall = Expression.fncall(
-            FnCall(name: "isEqual",
+            FnCall(name: "equal",
                    args: [.number("1"), .number("2")])
         )
         assertExpression(with: [fncall], for: lisp)
@@ -192,19 +192,26 @@ class Lisp2SwiftTests: XCTestCase {
         let lisp = """
         (if (== 1 2) (print "equal") (print "not equal"))
         """
+        
         let equals = Expression.fncall(
-            FnCall(name: "isEqual",
+            FnCall(name: "equal",
                    args: [.number("1"), .number("2")])
         )
         let print1 = Expression.fncall(
             FnCall(name: "print",
-                   args: [.string("equal")])
+                   args: [.string("\"equal\"")])
         )
         let print2 = Expression.fncall(
             FnCall(name: "print",
-                   args: [.string("equal")])
+                   args: [.string("\"not equal\"")])
         )
-        XCTFail("Hmm should if be a function or a special `conditional`")
+        let ifelse = Expression.ifelse(
+            condition: equals,
+            ifExpression: print1,
+            elseExpression: print2
+        )
+        assertExpression(with: [ifelse], for: lisp)
+    }
     }
     
     /// TRANSCODE

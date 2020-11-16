@@ -33,6 +33,27 @@ func transcode(expression: Expression) -> String {
     case .vector(let expressions):
         fatalError("Not implemented")
         
+    case .ifelse(let condition, let ifExpression, let elseExpression):
+        let condCode = transcode(expression: condition)
+        let ifCode = transcode(expression: ifExpression)
+        let elseCode = elseExpression.map(transcode(expression:))
+        let ifSwift = """
+                      if \(condCode) {
+                        \(ifCode)
+                      }
+                      """
+        if let elseCode = elseCode {
+            return ifSwift +
+            """
+            else {
+              \(elseCode)
+            }
+            """
+        }
+        else {
+            return ifSwift
+        }
+        
     case .expression(let expressions):
         // TODO: go through the sub expressions and apply them
         if expressions.count < 2 { fatalError("Transcode: Unexpected number of expression") }
@@ -62,8 +83,9 @@ func transcode(expressions: [Expression]) -> String {
 }
 
 func transcode(expressions: [Expression], library: [FnDecl]) -> String {
+    let imports = "import Foundation"
     let header = library.compactMap({$0.specialSwiftCode}).joined(separator: "\n")
     let transcoded = transcode(expressions: expressions)
-    return [header, transcoded].joined(separator: "\n")
+    return [imports, header, transcoded].joined(separator: "\n")
 }
 

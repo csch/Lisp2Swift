@@ -1,6 +1,8 @@
 (defn guessing-game []
   (print "Guess the number I have in mind [0-99]")
-  (if (== (readline) "12")
-      (print "Got it")
-    (print "Nope")))
+  (let [guessed (readline)
+        randy (string (random 0 100))]
+	(if (== guessed randy)
+	    (print "Nice one, you got it")
+	  (print "Nope"))))
 (guessing-game)

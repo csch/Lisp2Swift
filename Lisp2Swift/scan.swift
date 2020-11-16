@@ -25,11 +25,11 @@ enum Word: Equatable {
         return nil
     }
         
-    var isExpression: Bool {
-        if case .expression = self {
-            return true
+    var expression: [Word]? {
+        if case .expression(let expr) = self {
+            return expr
         }
-        return false
+        return nil
     }
 }
 
