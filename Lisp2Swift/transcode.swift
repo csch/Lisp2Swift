@@ -30,6 +30,9 @@ func transcode(expression: Expression) -> String {
     case .number(let number):
         return number
         
+    case .letExpression(let vector, let expressions):
+        fatalError("Not implemented")
+    
     case .vector(let expressions):
         fatalError("Not implemented")
         

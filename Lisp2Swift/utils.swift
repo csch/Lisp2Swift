@@ -24,4 +24,8 @@ extension Array {
     var butFirst: Self {
         return Array(self[1..<count])
     }
+    
+    var oddElements: Self {
+        return self.enumerated().filter({$0.offset % 2 == 0}).map({$0.element})
+    }
 }

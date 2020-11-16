@@ -212,6 +212,13 @@ class Lisp2SwiftTests: XCTestCase {
         )
         assertExpression(with: [ifelse], for: lisp)
     }
+    
+    func test_eval_let() {
+        let lisp = """
+        (let [a 12] (print a))
+        """
+        let letEx = Expression.letExpression(vector: [.symbol("a"), .number("12")], expressions: [.fncall(FnCall(name: "print", args: [.symbol("a")]))])
+        assertExpression(with: [letEx], for: lisp)
     }
     
     /// TRANSCODE

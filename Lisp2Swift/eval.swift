@@ -102,6 +102,20 @@ private func evaluate(word: Word, scopeSymbols: [String]) throws -> Expression {
             }
             return .ifelse(condition: expressions[0], ifExpression: expressions[1], elseExpression: expressions.last)
         }
+        else if firstAtom == "let" {
+            // Two options to fix it:
+            // a) add all odd symbols from vector [a 1 b 2 c 3] to scopeSymbols
+            // b) ignore scope symbols
+            guard let oddElements = remainder.first?.vector?.oddElements, oddElements.allSatisfy({$0.atom != nil}) else {
+                throw EvalError.invalidExpression(words)
+            }
+            let vectorSymbols = oddElements.compactMap({$0.atom})
+            let expressions = try remainder.map({try evaluate(word: $0, scopeSymbols: scopeSymbols + vectorSymbols)})
+            guard case .vector(let vectorExpressions) = expressions.first, expressions.count >= 2 else {
+                throw EvalError.invalidExpression(words)
+            }
+            return .letExpression(vector: vectorExpressions, expressions: expressions.butFirst)
+        }
         else {
             return try parseFunctionCall(name: firstAtom, remainder: remainder, scopeSymbols: scopeSymbols)
         }
@@ -125,11 +139,31 @@ indirect enum Expression: Equatable {
     case fndecl(_ : FnDecl)
     case fncall(_ : FnCall)
     case ifelse(condition: Expression, ifExpression: Expression, elseExpression: Expression?)
+    case letExpression(vector: [Expression], expressions: [Expression])
     case expression(_: [Expression])
     case vector(_: [Expression])
     case string(_: String)
     case symbol(_: String)
     case number(_: String)
+    
+    var type: String {
+        switch self {
+        case .vector:
+            return "vector"
+        case .string:
+            return "string"
+        case .number:
+            return "number"
+        case .symbol:
+            return "symbol"
+        case .fndecl:
+            return "fndecl"
+        case .fncall:
+            return "fncall"
+        default:
+            return "<TODO>"
+        }
+    }
 }
 
 enum FnBody: Equatable {
