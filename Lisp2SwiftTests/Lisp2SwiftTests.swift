@@ -179,14 +179,14 @@ class Lisp2SwiftTests: XCTestCase {
     
     func test_eval_defn_recursive() {
         let lisp = """
-        (defn foo2 [] (foo2))
+        (defn foo-bar [] (foo-bar))
         """
         let fncall = Expression.fncall(
-            FnCall(name: "foo2",
+            FnCall(name: "foo_bar",
                    args: [])
         )
         let fndecl = Expression.fndecl(
-            FnDecl(name: "foo2", args: [], body: .lisp(expressions: [fncall]))
+            FnDecl(name: "foo_bar", args: [], body: .lisp(expressions: [fncall]))
         )
         assertExpression(with: [fndecl], for: lisp)
     }

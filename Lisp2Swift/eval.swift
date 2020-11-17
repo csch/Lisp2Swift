@@ -72,7 +72,7 @@ private func parseFunctionDeclaration(name: String, remainder: [Word]) throws ->
         let scope = Scope(symbols: args)
         // add temporary function declaration so we can parse recursive calls
         let fnName = sanitiseFunction(name: name)
-        declaredFunctions[fnName] = FnDecl(name: fnName, args: args, body: FnBody.none)
+        declaredFunctions[name] = FnDecl(name: fnName, args: args, body: FnBody.none)
         let expressions = try evaluate(words: remainder.butFirst, scope: scope)
         return FnDecl(name: fnName, args: args, body: FnBody.lisp(expressions: expressions))
     }
