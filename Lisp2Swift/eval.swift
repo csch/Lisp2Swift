@@ -18,6 +18,23 @@ var declaredFunctions = [
                     }
                     """)),
     
+    "str" : FnDecl(name: "str",
+                 args: ["a"],
+                 body: .special(swiftCode:
+                    """
+                    func str(_ a: Any) -> Any {
+                        if let integer = a as? Int {
+                            return String(integer)
+                        }
+                        else if let double = a as? Double {
+                            return String(double)
+                        }
+                        else {
+                            return a
+                        }
+                    }
+                    """)),
+    
     "==" : FnDecl(name: "equal",
                  args: ["a" , "b"],
                  body: .special(swiftCode:
@@ -51,7 +68,7 @@ enum EvalError: Error, Equatable {
     case undeclaredFunction(_ name: String)
     case invalidExpression(_ words: [Word])
     case unknownSymbol(_ symbol: String)
-    case incorrectArguments(_ args: [Word])
+    case incorrectArguments(function: String, args: [Word])
 }
 
 struct Scope {
@@ -85,7 +102,7 @@ private func parseFunctionCall(name: String, remainder: [Word], scope: Scope) th
             return .fncall(FnCall(name: sanitiseFunction(name: fn.name), args: try remainder.map({try evaluate(word: $0, scope: scope)})))
         }
         else {
-            throw EvalError.incorrectArguments(remainder)
+            throw EvalError.incorrectArguments(function: name, args: remainder)
         }
     }
     else {
