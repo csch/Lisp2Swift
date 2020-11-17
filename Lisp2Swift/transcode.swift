@@ -1,7 +1,7 @@
 import Foundation
 
 func transcode(expression: Expression) -> String {
-    
+        
     switch expression {
     case .string(let string):
         return string
@@ -31,7 +31,12 @@ func transcode(expression: Expression) -> String {
         return number
         
     case .letExpression(let vector, let expressions):
-        fatalError("Not implemented")
+        let lets = vector.pairs.map({ pair -> String in
+            let letName = transcode(expression: pair.0)
+            let assignment = transcode(expression: pair.1)
+            return "let \(letName) = \(assignment)"
+        })
+        return lets.joined(separator: "\n") + "\n" + expressions.map(transcode(expression:)).joined(separator: "\n")
     
     case .vector(let expressions):
         fatalError("Not implemented")

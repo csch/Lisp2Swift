@@ -260,5 +260,19 @@ class Lisp2SwiftTests: XCTestCase {
         let result = l2s(lisp)
         XCTAssertEqual(result, .success("add(1,2)\n"))
     }
+    
+    func test_transcode_let_expression() throws {
+        let lisp = """
+        (let [a 2] (print a))
+        """
+        let result = l2s(lisp)
+        XCTAssertEqual(result, .success(
+                        """
+                        let a = 2
+                        print(a)
+
+                        """
+        ))
+    }
 }
 
