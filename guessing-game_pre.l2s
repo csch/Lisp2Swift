@@ -1,0 +1,10 @@
+(defn guessing-game []
+  (print "Guess the number I have in mind [0-99]")
+  (let [guessed (readline)
+        randy "12"]
+	(if (== guessed randy)
+	    (print "Nice one, you got it")
+	  (print "Nope")
+	  (guessing-game)
+	  )))
+(guessing-game)

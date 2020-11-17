@@ -1,5 +1,6 @@
 #!/bin/bash
 
-path="DerivedData/Lisp2Swift/Build/Products/Debug"
-$path/Lisp2Swift $@ > test.swift
-swift -suppress-warnings test.swift
+pathPrefix="`ls -d ~/Library/Developer/Xcode/DerivedData/Lisp2Swift*`"
+path="$pathPrefix/Build/Products/Debug"
+$path/Lisp2Swift $@ > l2s.swift
+swift -suppress-warnings l2s.swift

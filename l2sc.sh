@@ -1,4 +1,5 @@
 #!/bin/bash
 
-path="DerivedData/Lisp2Swift/Build/Products/Debug"
+pathPrefix="`ls -d ~/Library/Developer/Xcode/DerivedData/Lisp2Swift*`"
+path="$pathPrefix/Build/Products/Debug"
 $path/Lisp2Swift $@
