@@ -175,7 +175,21 @@ class Lisp2SwiftTests: XCTestCase {
             FnDecl(name: "foo", args: ["arg1"], body: .lisp(expressions: [fncall]))
         )
         assertExpression(with: [fndecl], for: lisp)
-    }        
+    }
+    
+    func test_eval_defn_recursive() {
+        let lisp = """
+        (defn foo2 [] (foo2))
+        """
+        let fncall = Expression.fncall(
+            FnCall(name: "foo2",
+                   args: [])
+        )
+        let fndecl = Expression.fndecl(
+            FnDecl(name: "foo2", args: [], body: .lisp(expressions: [fncall]))
+        )
+        assertExpression(with: [fndecl], for: lisp)
+    }
     
     func test_eval_equals() {
         let lisp = """

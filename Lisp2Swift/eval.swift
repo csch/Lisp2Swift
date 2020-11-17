@@ -54,23 +54,35 @@ enum EvalError: Error, Equatable {
     case incorrectArguments(_ args: [Word])
 }
 
-func evaluate(words: [Word], scopeSymbols: [String] = []) throws -> [Expression] {
-    return try words.map({ try evaluate(word: $0, scopeSymbols: scopeSymbols)})
+struct Scope {
+    let symbols: [String]
+    func adding(symbols newSymbols: [String]) -> Scope {
+        return Scope(symbols: symbols + newSymbols)
+    }
+    static let empty = Scope(symbols: [])
+}
+
+func evaluate(words: [Word], scope: Scope = .empty) throws -> [Expression] {
+    return try words.map({ try evaluate(word: $0, scope: scope)})
 }
 
 private func parseFunctionDeclaration(name: String, remainder: [Word]) throws -> FnDecl {
     let vector = remainder.first?.vector
     if let args = vector?.compactMap({$0.atom}), args.count == vector?.count {
-        let expressions = try evaluate(words: remainder.butFirst, scopeSymbols: args)
-        return FnDecl(name: sanitiseFunction(name: name), args: args, body: FnBody.lisp(expressions: expressions))
+        let scope = Scope(symbols: args)
+        // add temporary function declaration so we can parse recursive calls
+        let fnName = sanitiseFunction(name: name)
+        declaredFunctions[fnName] = FnDecl(name: fnName, args: args, body: FnBody.none)
+        let expressions = try evaluate(words: remainder.butFirst, scope: scope)
+        return FnDecl(name: fnName, args: args, body: FnBody.lisp(expressions: expressions))
     }
     throw EvalError.invalidFunctionDeclaration
 }
 
-private func parseFunctionCall(name: String, remainder: [Word], scopeSymbols: [String]) throws -> Expression {
+private func parseFunctionCall(name: String, remainder: [Word], scope: Scope) throws -> Expression {
     if let fn = declaredFunctions[name] {
         if fn.args.count == remainder.count {
-            return .fncall(FnCall(name: sanitiseFunction(name: fn.name), args: try remainder.map({try evaluate(word: $0, scopeSymbols: scopeSymbols)})))
+            return .fncall(FnCall(name: sanitiseFunction(name: fn.name), args: try remainder.map({try evaluate(word: $0, scope: scope)})))
         }
         else {
             throw EvalError.incorrectArguments(remainder)
@@ -81,7 +93,7 @@ private func parseFunctionCall(name: String, remainder: [Word], scopeSymbols: [S
     }
 }
 
-private func evaluate(word: Word, scopeSymbols: [String]) throws -> Expression {
+private func evaluate(word: Word, scope: Scope) throws -> Expression {
     switch word {
     case .expression(let words):
         
@@ -96,7 +108,7 @@ private func evaluate(word: Word, scopeSymbols: [String]) throws -> Expression {
             return .fndecl(decl)
         }
         else if firstAtom == "if" {
-            let expressions = try remainder.map({try evaluate(word: $0, scopeSymbols: scopeSymbols)})
+            let expressions = try remainder.map({try evaluate(word: $0, scope: scope)})
             guard expressions.count == 2 || expressions.count == 3 else {
                 throw EvalError.invalidExpression(words)
             }
@@ -107,19 +119,19 @@ private func evaluate(word: Word, scopeSymbols: [String]) throws -> Expression {
                 throw EvalError.invalidExpression(words)
             }
             let vectorSymbols = oddElements.compactMap({$0.atom})
-            let expressions = try remainder.map({try evaluate(word: $0, scopeSymbols: scopeSymbols + vectorSymbols)})
+            let expressions = try remainder.map({try evaluate(word: $0, scope: scope.adding(symbols: vectorSymbols))})
             guard case .vector(let vectorExpressions) = expressions.first, expressions.count >= 2 else {
                 throw EvalError.invalidExpression(words)
             }
             return .letExpression(vector: vectorExpressions, expressions: expressions.butFirst)
         }
         else {
-            return try parseFunctionCall(name: firstAtom, remainder: remainder, scopeSymbols: scopeSymbols)
+            return try parseFunctionCall(name: firstAtom, remainder: remainder, scope: scope)
         }
     case .vector(let words):
-        return .vector(try words.map({try evaluate(word: $0, scopeSymbols: scopeSymbols)}))
+        return .vector(try words.map({try evaluate(word: $0, scope: scope)}))
     case .atom(let atom):
-        if scopeSymbols.contains(atom) {
+        if scope.symbols.contains(atom) {
             return .symbol(atom)
         }
         else {
