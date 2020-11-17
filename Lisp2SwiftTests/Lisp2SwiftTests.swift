@@ -163,6 +163,25 @@ class Lisp2SwiftTests: XCTestCase {
                                 ))], for: lisp)
     }
 
+    func test_eval_do() {
+        let lisp =
+        """
+        (do
+          (print "Hi")
+          (print "You"))
+        """
+        let fncall1 = Expression.fncall(
+            FnCall(name: "print",
+                   args: [.string("\"Hi\"")])
+        )
+        let fncall2 = Expression.fncall(
+            FnCall(name: "print",
+                   args: [.string("\"You\"")])
+        )
+        let docall = Expression.docall(expressions: [fncall1, fncall2])
+        assertExpression(with: [docall], for: lisp)
+    }
+    
     func test_eval_defn() {
         let lisp = """
         (defn foo [arg1] (+ arg1 arg1))

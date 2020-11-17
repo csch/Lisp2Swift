@@ -114,6 +114,10 @@ private func evaluate(word: Word, scope: Scope) throws -> Expression {
             }
             return .ifelse(condition: expressions[0], ifExpression: expressions[1], elseExpression: expressions.last)
         }
+        else if firstAtom == "do" {
+            let expressions = try remainder.map({try evaluate(word: $0, scope: scope)})
+            return .docall(expressions: expressions)
+        }
         else if firstAtom == "let" {
             guard let oddElements = remainder.first?.vector?.oddElements, oddElements.allSatisfy({$0.atom != nil}) else {
                 throw EvalError.invalidExpression(words)
@@ -147,6 +151,7 @@ private func evaluate(word: Word, scope: Scope) throws -> Expression {
 indirect enum Expression: Equatable {
     case fndecl(_ : FnDecl)
     case fncall(_ : FnCall)
+    case docall(expressions: [Expression])
     case ifelse(condition: Expression, ifExpression: Expression, elseExpression: Expression?)
     case letExpression(vector: [Expression], expressions: [Expression])
     case expression(_: [Expression])

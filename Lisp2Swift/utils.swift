@@ -13,8 +13,7 @@ extension String {
     }
 }
 
-extension Array {
-    
+extension Array {    
     var butFirst: Self {
         return Array(self[1..<count])
     }

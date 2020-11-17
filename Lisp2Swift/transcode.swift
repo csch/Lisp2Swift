@@ -38,6 +38,9 @@ func transcode(expression: Expression) -> String {
         })
         return lets.joined(separator: "\n") + "\n" + expressions.map(transcode(expression:)).joined(separator: "\n")
     
+    case .docall(let expressions):
+        return expressions.map(transcode).joined(separator: "\n")
+        
     case .vector(let expressions):
         fatalError("Not implemented")
         
