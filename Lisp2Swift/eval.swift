@@ -17,6 +17,18 @@ var declaredFunctions = [
                         return a
                     }
                     """)),
+ 
+    "random" : FnDecl(name: "random",
+                 args: ["a", "b"],
+                 body: .special(swiftCode:
+                    """
+                    func random(_ a: Any, _ b: Any) -> Any {
+                        guard let int1 = a as? Int, let int2 = b as? Int else {
+                            fatalError("Unsupported data types: \\(a) \\(b)")
+                        }
+                        return Int.random(in: int1..<int2+1)
+                    }
+                    """)),
     
     "str" : FnDecl(name: "str",
                  args: ["a"],

@@ -6,5 +6,5 @@
 	(print "Nope, try again!")
 	(guessing-game randy)))))
 
-(print "Guess the number I have in mind [0-99]")
-(guessing-game (str 12))
+(print "Guess the number I have in mind [0-9]")
+(guessing-game (str (random 0 9)))
