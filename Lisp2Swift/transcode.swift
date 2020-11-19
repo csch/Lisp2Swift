@@ -66,14 +66,10 @@ func transcode(expression: Expression) -> String {
         }
         
     case .expression(let expressions):
-        // TODO: go through the sub expressions and apply them
-        if expressions.count < 2 { fatalError("Transcode: Unexpected number of expression") }
+        if expressions.count < 2 { fatalError("Transcode: Unexpected number of expressions") }
         let command = transcode(expression: expressions[0])
         let params = Array(expressions.dropFirst()).map(transcode(expression:))
         
-        ///
-        /// TODO: 1. simplify/clean up functions that work in the same manner
-        ///
         switch command {
         case "print":
             let printParams = params.joined(separator: ",")
