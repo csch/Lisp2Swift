@@ -254,6 +254,21 @@ class Lisp2SwiftTests: XCTestCase {
         assertExpression(with: [letEx], for: lisp)
     }
     
+    func test_eval_defn_and_call() {
+        let lisp = """
+        (defn foo [] (print "1"))
+        (foo)
+        """
+        let result = eval(lisp)
+        switch result {
+        case .success:
+            () // expected
+        case .failure(let error):
+            XCTFail("Unexpected eval failure: \(error)")
+        }
+    }
+    
+    
     /// TRANSCODE
     
     func test_transcode_print_expression() throws {
@@ -293,6 +308,22 @@ class Lisp2SwiftTests: XCTestCase {
         """
         let result = l2s(lisp)
         XCTAssertEqual(result, .success("add(1,2)\n"))
+    }
+    
+    func test_transcode_defn_and_call_expression() throws {
+        let lisp = """
+        (defn foo [] (print "1"))
+        (foo)
+        """
+        let result = l2s(lisp)
+        switch result {
+        case .success(let string):
+            XCTAssertTrue(string.contains("func foo () {"))
+            XCTAssertTrue(string.contains("print(\"1\")"))
+            XCTAssertTrue(string.contains("foo()"))
+        case .failure:
+            XCTFail("Unexpected failure")
+        }
     }
     
     func test_transcode_let_expression() throws {

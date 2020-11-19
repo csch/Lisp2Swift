@@ -2,12 +2,6 @@ import Foundation
 
 /// Function mappings
 
-
-func sanitiseFunction(name: String) -> String {
-    name.replacingOccurrences(of: "-", with: "_")
-}
-
-// TODO: this shouldn't be a global variable (because tests currently reuse it)
 let standardFunctions = [
     "+" : FnDecl(name: "add",
                  args: ["a", "b"],
@@ -103,10 +97,23 @@ struct Scope {
     func hasFunction(forName: String) -> Bool {
         return declaredFunctions[forName] != nil
     }
+    func merging(other: Scope) -> Scope {
+        let allSymbols = Set(symbols + other.symbols)
+        let mergedFunctions = declaredFunctions.merging(other.declaredFunctions) { (a, b) in return a }
+        return Scope(symbols: Array(allSymbols), declaredFunctions: mergedFunctions)
+    }
 }
 
 func evaluate(words: [Word], scope: Scope) throws -> [Expression] {
-    return try words.map({ try evaluate(word: $0, scope: scope)})
+    let scopedExpressions = try words.reduce([ScopedExpression](), { result, word in
+        let scopedExpression = try evaluate(word: word, scope: result.last?.scope ?? scope)
+        return result + [scopedExpression]
+    })
+    return scopedExpressions.map({$0.expression})
+}
+
+func sanitiseFunction(name: String) -> String {
+    name.replacingOccurrences(of: "-", with: "_")
 }
 
 private func parseFunctionDeclaration(name: String, remainder: [Word], scope: Scope) throws -> FnDecl {
@@ -124,7 +131,12 @@ private func parseFunctionDeclaration(name: String, remainder: [Word], scope: Sc
 private func parseFunctionCall(name: String, remainder: [Word], scope: Scope) throws -> Expression {
     if let fn = scope.declaredFunctions[name] {
         if fn.args.count == remainder.count {
-            return .fncall(FnCall(name: sanitiseFunction(name: fn.name), args: try remainder.map({try evaluate(word: $0, scope: scope)})))
+            return .fncall(
+                FnCall(
+                    name: sanitiseFunction(name: fn.name),
+                    args: try remainder.map({try evaluate(word: $0, scope: scope).expression})
+                )
+            )
         }
         else {
             throw EvalError.incorrectArguments(function: name, args: remainder)
@@ -135,7 +147,9 @@ private func parseFunctionCall(name: String, remainder: [Word], scope: Scope) th
     }
 }
 
-private func evaluate(word: Word, scope: Scope) throws -> Expression {
+private func evaluate(word: Word, scope: Scope) throws -> ScopedExpression {
+    let expression: Expression
+    var updatedScope = scope
     switch word {
     case .expression(let words):
         
@@ -144,51 +158,55 @@ private func evaluate(word: Word, scope: Scope) throws -> Expression {
         
         if firstAtom == "defn" {
             guard let name = remainder.first?.atom else { throw EvalError.invalidFunctionDeclaration }
-            guard scope.hasFunction(forName: name) else { throw EvalError.functionAlreadyExists(name) }
+            guard scope.hasFunction(forName: name) == false else { throw EvalError.functionAlreadyExists(name) }
             let decl = try parseFunctionDeclaration(name: name, remainder: remainder.butFirst, scope: scope)
-            /// hmm how to return new Scope ???
-            // declaredFunctions[name] = decl
-            return .fndecl(decl)
+            updatedScope = updatedScope.adding(function: decl, forName: name)
+            expression = .fndecl(decl)
         }
         else if firstAtom == "if" {
-            let expressions = try remainder.map({try evaluate(word: $0, scope: scope)})
+            let expressions = try remainder.map({try evaluate(word: $0, scope: scope).expression})
             guard expressions.count == 2 || expressions.count == 3 else {
                 throw EvalError.invalidExpression(words)
             }
-            return .ifelse(condition: expressions[0], ifExpression: expressions[1], elseExpression: expressions.last)
+            expression = .ifelse(
+                condition: expressions[0],
+                ifExpression: expressions[1],
+                elseExpression: expressions.last
+            )
         }
         else if firstAtom == "do" {
-            let expressions = try remainder.map({try evaluate(word: $0, scope: scope)})
-            return .docall(expressions: expressions)
+            let expressions = try remainder.map({try evaluate(word: $0, scope: scope).expression})
+            expression = .docall(expressions: expressions)
         }
         else if firstAtom == "let" {
             guard let oddElements = remainder.first?.vector?.oddElements, oddElements.allSatisfy({$0.atom != nil}) else {
                 throw EvalError.invalidExpression(words)
             }
             let vectorSymbols = oddElements.compactMap({$0.atom})
-            let expressions = try remainder.map({try evaluate(word: $0, scope: scope.adding(symbols: vectorSymbols))})
+            let expressions = try remainder.map({try evaluate(word: $0, scope: scope.adding(symbols: vectorSymbols)).expression})
             guard case .vector(let vectorExpressions) = expressions.first, expressions.count >= 2 else {
                 throw EvalError.invalidExpression(words)
             }
-            return .letExpression(vector: vectorExpressions, expressions: expressions.butFirst)
+            expression = .letExpression(vector: vectorExpressions, expressions: expressions.butFirst)
         }
         else {
-            return try parseFunctionCall(name: firstAtom, remainder: remainder, scope: scope)
+            expression = try parseFunctionCall(name: firstAtom, remainder: remainder, scope: scope)
         }
     case .vector(let words):
-        return .vector(try words.map({try evaluate(word: $0, scope: scope)}))
+        expression = .vector(try words.map({try evaluate(word: $0, scope: scope).expression}))
     case .atom(let atom):
         if scope.symbols.contains(atom) {
-            return .symbol(atom)
+            expression = .symbol(atom)
         }
         else {
             throw EvalError.unknownSymbol(atom)
         }
     case .number(let number):
-        return .number(number)
+        expression = .number(number)
     case .string(let string):
-        return .string(string)
+        expression = .string(string)
     }
+    return ScopedExpression(expression: expression, scope: updatedScope)
 }
 
 indirect enum Expression: Equatable {
