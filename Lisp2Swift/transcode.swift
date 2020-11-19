@@ -90,9 +90,7 @@ func transcode(expressions: [Expression]) -> String {
 }
 
 func transcode(expressions: [Expression], library: [FnDecl]) -> String {
-    let imports = "import Foundation"
-    let header = library.compactMap({$0.specialSwiftCode}).joined(separator: "\n")
     let transcoded = transcode(expressions: expressions)
-    return [imports, header, transcoded].joined(separator: "\n")
+    return [swiftWrappers, transcoded].joined(separator: "\n")
 }
 

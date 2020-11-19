@@ -1,62 +1,23 @@
 import Foundation
 
-/// Function mappings
+/// Function mappings (see wrapper_functions.swift)
 
 let standardFunctions = [
     "+" : FnDecl(name: "add",
                  args: ["a", "b"],
-                 body: .special(swiftCode:
-                    """
-                    func add(_ a: Any, _ b: Any) -> Any {
-                        return a
-                    }
-                    """)),
+                 body: .none),
  
     "random" : FnDecl(name: "random",
-                 args: ["a", "b"],
-                 body: .special(swiftCode:
-                    """
-                    func random(_ a: Any, _ b: Any) -> Any {
-                        guard let int1 = a as? Int, let int2 = b as? Int else {
-                            fatalError("Unsupported data types: \\(a) \\(b)")
-                        }
-                        return Int.random(in: int1..<int2+1)
-                    }
-                    """)),
-    
+                      args: ["a", "b"],
+                      body: .none),
+                    
     "str" : FnDecl(name: "str",
-                 args: ["a"],
-                 body: .special(swiftCode:
-                    """
-                    func str(_ a: Any) -> Any {
-                        if let integer = a as? Int {
-                            return String(integer)
-                        }
-                        else if let double = a as? Double {
-                            return String(double)
-                        }
-                        else {
-                            return a
-                        }
-                    }
-                    """)),
+                   args: ["a"],
+                   body: .none),
     
     "==" : FnDecl(name: "equal",
                  args: ["a" , "b"],
-                 body: .special(swiftCode:
-                    """
-                    func equal(_ a: Any, _ b: Any) -> Bool {
-                        if let lh = a as? NSNumber, let rh = b as? NSNumber {
-                            return lh == rh
-                        }
-                        else if let lh = a as? String, let rh = b as? String {
-                            return lh == rh
-                        }
-                        else {
-                            return false
-                        }
-                    }
-                    """)),
+                 body: .none),
     
     "print" : FnDecl(name: "print",
                  args: ["a"],
@@ -223,8 +184,7 @@ indirect enum Expression: Equatable {
 }
 
 enum FnBody: Equatable {
-    case none
-    case special(swiftCode: String)
+    case none // already defined via `swift-wrappers.swift`
     case lisp(expressions: [Expression])
 }
 
@@ -232,17 +192,8 @@ struct FnDecl: Equatable {
     let name: String
     let args: [String]
     let body: FnBody
-  
-    var specialSwiftCode: String? {
-        if case .special(let code) = body {
-            return code
-        }
-        else {
-            return nil
-        }
-    }        
 }
-
+  
 struct FnCall: Equatable {
     let name: String
     let args: [Expression]
