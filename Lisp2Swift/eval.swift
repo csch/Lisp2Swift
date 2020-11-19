@@ -8,7 +8,7 @@ func sanitiseFunction(name: String) -> String {
 }
 
 // TODO: this shouldn't be a global variable (because tests currently reuse it)
-var declaredFunctions = [
+let standardFunctions = [
     "+" : FnDecl(name: "add",
                  args: ["a", "b"],
                  body: .special(swiftCode:
@@ -73,8 +73,9 @@ var declaredFunctions = [
                  body: .none)
 ]
 
+let initialScope = Scope(symbols: [], declaredFunctions: standardFunctions)
+
 enum EvalError: Error, Equatable {
-    case foo
     case functionAlreadyExists(_ name: String)
     case invalidFunctionDeclaration
     case undeclaredFunction(_ name: String)
@@ -83,33 +84,45 @@ enum EvalError: Error, Equatable {
     case incorrectArguments(function: String, args: [Word])
 }
 
-struct Scope {
-    let symbols: [String]
-    func adding(symbols newSymbols: [String]) -> Scope {
-        return Scope(symbols: symbols + newSymbols)
-    }
-    static let empty = Scope(symbols: [])
+struct ScopedExpression {
+    let expression: Expression
+    let scope: Scope
 }
 
-func evaluate(words: [Word], scope: Scope = .empty) throws -> [Expression] {
+struct Scope {
+    let symbols: [String]
+    let declaredFunctions: [String : FnDecl]
+    func adding(symbols newSymbols: [String]) -> Scope {
+        return Scope(symbols: symbols + newSymbols, declaredFunctions: declaredFunctions)
+    }
+    func adding(function: FnDecl, forName: String) -> Scope {
+        var merged = declaredFunctions
+        merged[forName] = function
+        return Scope(symbols: symbols, declaredFunctions: merged)
+    }
+    func hasFunction(forName: String) -> Bool {
+        return declaredFunctions[forName] != nil
+    }
+}
+
+func evaluate(words: [Word], scope: Scope) throws -> [Expression] {
     return try words.map({ try evaluate(word: $0, scope: scope)})
 }
 
-private func parseFunctionDeclaration(name: String, remainder: [Word]) throws -> FnDecl {
+private func parseFunctionDeclaration(name: String, remainder: [Word], scope: Scope) throws -> FnDecl {
     let vector = remainder.first?.vector
     if let args = vector?.compactMap({$0.atom}), args.count == vector?.count {
-        let scope = Scope(symbols: args)
-        // add temporary function declaration so we can parse recursive calls
         let fnName = sanitiseFunction(name: name)
-        declaredFunctions[name] = FnDecl(name: fnName, args: args, body: FnBody.none)
-        let expressions = try evaluate(words: remainder.butFirst, scope: scope)
+        let parsedFunc = FnDecl(name: fnName, args: args, body: FnBody.none)
+        let newScope = scope.adding(symbols: args).adding(function: parsedFunc, forName: name)
+        let expressions = try evaluate(words: remainder.butFirst, scope: newScope)
         return FnDecl(name: fnName, args: args, body: FnBody.lisp(expressions: expressions))
     }
     throw EvalError.invalidFunctionDeclaration
 }
 
 private func parseFunctionCall(name: String, remainder: [Word], scope: Scope) throws -> Expression {
-    if let fn = declaredFunctions[name] {
+    if let fn = scope.declaredFunctions[name] {
         if fn.args.count == remainder.count {
             return .fncall(FnCall(name: sanitiseFunction(name: fn.name), args: try remainder.map({try evaluate(word: $0, scope: scope)})))
         }
@@ -131,9 +144,10 @@ private func evaluate(word: Word, scope: Scope) throws -> Expression {
         
         if firstAtom == "defn" {
             guard let name = remainder.first?.atom else { throw EvalError.invalidFunctionDeclaration }
-            guard declaredFunctions[name] == nil else { throw EvalError.functionAlreadyExists(name) }
-            let decl = try parseFunctionDeclaration(name: name, remainder: remainder.butFirst)
-            declaredFunctions[name] = decl
+            guard scope.hasFunction(forName: name) else { throw EvalError.functionAlreadyExists(name) }
+            let decl = try parseFunctionDeclaration(name: name, remainder: remainder.butFirst, scope: scope)
+            /// hmm how to return new Scope ???
+            // declaredFunctions[name] = decl
             return .fndecl(decl)
         }
         else if firstAtom == "if" {

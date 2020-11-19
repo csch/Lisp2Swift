@@ -13,7 +13,7 @@ class Lisp2SwiftTests: XCTestCase {
     
     func eval(_ text: String) -> Result<[Expression], EvalError> {
         do {
-            return .success(try evaluate(words: _scan(text)))
+            return .success(try evaluate(words: _scan(text), scope: initialScope))
         }
         catch {
             return .failure(error as! EvalError)
@@ -283,7 +283,8 @@ class Lisp2SwiftTests: XCTestCase {
         (+ 1 2 3)
         """
         let result = l2s(lisp)
-        XCTAssertEqual(result, .failure(.incorrectArguments([.number("1"), .number("2"), .number("3")])))
+        let args: [Word] = [.number("1"), .number("2"), .number("3")]
+        XCTAssertEqual(result, .failure(.incorrectArguments(function: "+", args: args)))
     }
     
     func test_transcode_add_expression() throws {

@@ -3,8 +3,8 @@ import Foundation
 func transcode(_ lisp: String) {
     do {
         let scanned = try scan(lisp)
-        let expressions = try evaluate(words: scanned)
-        let code = transcode(expressions: expressions, library: Array(declaredFunctions.values))
+        let expressions = try evaluate(words: scanned, scope: initialScope)
+        let code = transcode(expressions: expressions, library: Array(standardFunctions.values))
         print(code)
     }
     catch {
