@@ -5,13 +5,13 @@
 To be clear, this is a hobby project/experiment with currently zero plans to bring this to
 any state where you could write elaborate lisp programs and transcode it to Swift.
 
-### "OK, but what exactly CAN you do with it?"
-
+### "Right, so what exactly CAN you do with it?"
+These [unit tests] will give you an idea what's covered so far.
 The following program compiles to Swift 5 and is runnable as a standalone Swift program (a script).
-The used expressions below are pretty much what this project can do at the moment :)
-There is no concept of an iOS or Mac app in this project.
+The used expressions below are pretty much what this project can do at the moment don't expect much more :)
+Also there is no concept of an iOS or Mac app in this project.
 
-guessing-game.l2s:
+[guessing-game.l2s]:
 
 ```
 (defn guessing-game [randomnum]
@@ -30,17 +30,17 @@ guessing-game.l2s:
 ```
 git clone URL-HERE/Lisp2Swift
 cd Lisp2Swift
--- TODO: copy executable --
+./build.sh
 ./l2sr.sh -f guessing-game.l2s
 
 
 ### Command line scripts ###
 ```
-./l2sc.sh '(print "hello")' // Compiles into Swift and prints it to the console
-./l2sc.sh -f MyLisp.l2s     // Same as above but reads l2s from file
-./l2sr.sh -f MyLisp.l2s     // Compiles into Swift and pipes to a swift file, then runs this via `swift` command
+./l2sc.sh '(print "hello")'      # Compiles into Swift and prints it to the console
+./l2sr.sh '(print "hello")'      # Compiles into Swift and runs it
+./l2sc.sh -f guessing-game.l2s   # Same as above but reads from a file
+./l2sr.sh -f guessing-game.l2s   # Run l2s from a file
 ```
-
 
 ### Implemented functions ### // TODO: make table
 - `==`: Wrapped, Returns true if numbers are equal or strings are equal (returns false for "1" == 1)
@@ -51,11 +51,12 @@ cd Lisp2Swift
 
 ### What could be done next? ###
 0. Comments! Currently any ;;; would result in an error
-1. Use `dashed-variable` names, also errors out because Swift doesn't compile `dashed-vars`
+1. Use `dashed-variable` names, also errors out because Swift doesn't compile `dashed-vars` (reuse `sanitiseFunction`)
 2. All of the functions above are provided as Swift wrapper functions that are injected into every transcoded program.
 This is obviously a major headache if everything you want to use from Swift has to be provided as a Swift-wrapper.
 To fix this it would be cool to use Clojure's `.` approach and call any Swift functionality like so:
 ```(print (str (. Int max)))```
-3. Eval.swift uses a global variable (map) for `declaredFunctions`. Because of this you could get issues with unit tests at the moment because they would change each other's state. This should be refactored and passed in as `Scope`.
-4. `true`, `false` are unknown symbols so far
+3. `true`, `false` are unknown symbols so far
+4. Operators need some love
+5. Implement vectors to be used as arguments
 ...
