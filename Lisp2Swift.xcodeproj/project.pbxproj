@@ -102,8 +102,8 @@
 				AA549702254CA4BB00980FAE /* utils.swift */,
 				AAAA0A7A254C305800C3E83E /* scan.swift */,
 				AA5496FE254CA44800980FAE /* eval.swift */,
-				AAB1B9832566E7790086D9AF /* swift-wrappers.swift */,
 				AA549706254CA57A00980FAE /* transcode.swift */,
+				AAB1B9832566E7790086D9AF /* swift-wrappers.swift */,
 				AA218B8C255AE60900B5555A /* l2sc.sh */,
 				AA218B8B255AE60900B5555A /* l2sr.sh */,
 			);
@@ -220,7 +220,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "file=\"unused-swift.rb\"\nif [ -f \"$file\" ]\nthen\necho \"$file found.\"\nruby $file xcode\nelse\necho \"$file doesn't exist\"\nfi\n";
+			shellScript = "file=\"Lisp2Swift/scripts/unused-swift.rb\"\nif [ -f \"$file\" ]\nthen\necho \"$file found.\"\nruby $file xcode\nelse\necho \"$file doesn't exist\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
