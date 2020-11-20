@@ -8,7 +8,18 @@ let swiftWrappers =
 import Foundation
 
 func add(_ a: Any, _ b: Any) -> Any {
-    return a
+    switch (a, b) {
+    case let (a, b) as (Int, Int):
+        return a + b
+    case let (a, b) as (Double, Int):
+        return a + Double(b)
+    case let (a, b) as (Int, Double):
+        return Double(a) + b
+    case let (a, b) as (Double, Double):
+        return a + b
+    default:
+        fatalError("add: Unsupported data types: \\(a) \\(b)")
+    }
 }
 
 func str(_ a: Any) -> Any {
@@ -25,7 +36,7 @@ func str(_ a: Any) -> Any {
 
 func random(_ a: Any, _ b: Any) -> Any {
     guard let int1 = a as? Int, let int2 = b as? Int else {
-        fatalError("Unsupported data types: \\(a) \\(b)")
+        fatalError("random: Unsupported data types: \\(a) \\(b)")
     }
     return Int.random(in: int1..<int2+1)
 }

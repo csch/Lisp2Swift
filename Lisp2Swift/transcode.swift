@@ -66,22 +66,7 @@ func transcode(expression: Expression) -> String {
         }
         
     case .expression(let expressions):
-        if expressions.count < 2 { fatalError("Transcode: Unexpected number of expressions") }
-        let command = transcode(expression: expressions[0])
-        let params = Array(expressions.dropFirst()).map(transcode(expression:))
-        
-        switch command {
-        case "print":
-            let printParams = params.joined(separator: ",")
-            return command + "(" + printParams + ")"
-        case "+", "-", "*", "/":
-            let equation = params.joined(separator: " \(command) ")
-            return "(\(equation))"
-        case "<", ">", ">=", "<=", "==":
-            return params[0] + " \(command) " + params[1]
-        default:
-            fatalError("Transcode: Unexpected command: \(command)")
-        }
+        fatalError("Transcode: Unexpected expression: \(expressions)")
     }
 }
 
