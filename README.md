@@ -31,7 +31,6 @@ git clone https://github.com/csch/Lisp2Swift.git
 cd Lisp2Swift
 ./build.sh
 ./l2sr.sh -f guessing-game.l2s
-
 ```
 
 ### Command line scripts ###
