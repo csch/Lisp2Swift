@@ -1,4 +1,4 @@
-# L2S - A (clojure-like) Lisp to Swift Transcoder
+# l2s - A (clojure-like) Lisp to Swift Transcoder
 
 ### Project Status: Experimental (1% finished)
 
@@ -25,7 +25,7 @@ Also there is no concept of an iOS or Mac app in this project.
 (guessing-game (str (random 0 9)))
 ```
 
-### "Sweet, how can I run this "Guessing Game"?"
+### "Sweet, how can I run this 'Guessing Game'?"
 ```
 git clone https://github.com/csch/Lisp2Swift.git
 cd Lisp2Swift
@@ -42,7 +42,7 @@ cd Lisp2Swift
 ./l2sr.sh -f guessing-game.l2s   # Same as above but reads from a file
 ```
 
-### Available L2S functions ###
+### Available l2s functions ###
 There's not much here yet :)
 
 | Function   | Description | 
