@@ -12,7 +12,7 @@ Also there is no concept of an iOS or Mac app in this project.
 
 [guessing-game.l2s](guessing-game.l2s):
 
-```
+```clojure
 (defn guessing-game [randomnum]
   (let [guessed (readline)]
     (if (== guessed randomnum)
