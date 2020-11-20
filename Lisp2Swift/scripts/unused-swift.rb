@@ -1,5 +1,10 @@
 #!/usr/bin/ruby
 #encoding: utf-8
+#
+# Origin: https://medium.com/@gabriel_lewis/how-to-easily-find-unused-swift-code-in-xcode-159631961acf
+# Author: Gabriel Lewis
+#
+
 Encoding.default_external = Encoding::UTF_8
 Encoding.default_internal = Encoding::UTF_8
 
