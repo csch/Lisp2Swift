@@ -16,10 +16,10 @@ Also there is no concept of an iOS or Mac app in this project.
 (defn guessing-game [randomnum]
   (let [guessed (readline)]
     (if (== guessed randomnum)
-      (print "Nice one, you got it.")
+      (print "Nice one, you got it!")
       (do
-	     (print "Nope, try again!")
-	     (guessing-game randomnum)))))
+        (print "Nope, try again!")
+        (guessing-game randomnum)))))
 
 (print "Guess the number I have in mind [0-9]")
 (guessing-game (str (random 0 9)))

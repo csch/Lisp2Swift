@@ -1,7 +1,7 @@
 (defn guessing-game [randomnum]
   (let [guessed (readline)]
     (if (== guessed randomnum)
-      (print "Nice one, you got it")
+      (print "Nice one, you got it!")
       (do
 	(print "Nope, try again!")
 	(guessing-game randomnum)))))
