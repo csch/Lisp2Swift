@@ -1,4 +1,4 @@
-# l2s - A (clojure-like) Lisp to Swift Transcoder
+# l2s - A (clojure-like) Lisp to Swift Transpiler
 
 ### Project Status: Experimental (1% finished)
 
